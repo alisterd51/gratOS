@@ -3,6 +3,7 @@ AS		:= i686-elf-as
 LD		:= i686-elf-ld
 OBJDUMP	:= i686-elf-objdump
 CARGO	:= cargo
+QEMU	:= qemu-system-x86_64
 
 ARCH	:= x86
 
@@ -43,3 +44,6 @@ ${ISO}: ${BIN}
 clean:
 	${CARGO} clean
 	rm -rf ${OBJDIR} ${ISODIR} ${BIN} ${ISO}
+
+run: ${ISO}
+	${QEMU} -cdrom ${ISO}
