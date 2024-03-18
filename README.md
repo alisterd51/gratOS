@@ -18,7 +18,7 @@ qemu-system-x86_64 -kernel kernel.x86.bin
 ## TODO
 
 - [ ] Mandatory:
-  - [ ] Install GRUB on an virtual image
+  - [x] Install GRUB on an virtual image
   - [ ] Write an ASM boot code that handles multiboot header, and use GRUB to init and call main function of the kernel itself
   - [ ] Write basic kernel code of the choosen language.
   - [ ] Compile it with correct flags, and link it to make it bootable.
