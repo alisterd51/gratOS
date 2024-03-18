@@ -19,15 +19,15 @@ qemu-system-x86_64 -kernel kernel.x86.bin
 
 - [ ] Mandatory:
   - [x] Install GRUB on an virtual image
-  - [ ] Write an ASM boot code that handles multiboot header, and use GRUB to init and call main function of the kernel itself
-  - [ ] Write basic kernel code of the choosen language.
-  - [ ] Compile it with correct flags, and link it to make it bootable.
+  - [x] Write an ASM boot code that handles multiboot header, and use GRUB to init and call main function of the kernel itself
+  - [x] Write basic kernel code of the choosen language.
+  - [x] Compile it with correct flags, and link it to make it bootable.
   - [ ] Once all of those steps above are done, you can write some helpers like kernel types or basic functions (strlen, strcmp, ...)
   - [ ] Your work must not exceed 10 MB.
   - [ ] Code the interface between your kernel and the screen.
   - [ ] Display "42" on the screen.
     - [ ] clean screen
-    - [x] print "42"
+    - [ ] print "42"
   - [ ] Makefile:
     Your makefile must compile all your source files with the right flags and the right compiler. Keep in mind that your kernel will use at least two different languages (ASM and whatever-you-choose), so make (<- joke) your Makefile’s rules correctly
 - [ ] Bonus:
