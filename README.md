@@ -27,7 +27,7 @@ qemu-system-x86_64 -kernel kernel.x86.bin
   - [ ] Code the interface between your kernel and the screen.
   - [ ] Display "42" on the screen.
     - [ ] clean screen
-    - [ ] print "42"
+    - [x] print "42"
   - [ ] Makefile:
     Your makefile must compile all your source files with the right flags and the right compiler. Keep in mind that your kernel will use at least two different languages (ASM and whatever-you-choose), so make (<- joke) your Makefile’s rules correctly
 - [ ] Bonus:

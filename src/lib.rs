@@ -8,7 +8,7 @@ fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
 
-static HELLO: &[u8] = b"Hello World!";
+static HELLO: &[u8] = b"42";
 
 #[no_mangle]
 pub extern "C" fn kmain() -> ! {
@@ -17,7 +17,7 @@ pub extern "C" fn kmain() -> ! {
     for (i, &byte) in HELLO.iter().enumerate() {
         unsafe {
             *vga_buffer.offset(i as isize * 2) = byte;
-            *vga_buffer.offset(i as isize * 2 + 1) = 0xb;
+            *vga_buffer.offset(i as isize * 2 + 1) = 0x7;
         }
     }
 
