@@ -6,14 +6,9 @@ Kernel from scratch (in rust)
 
 ## Run
 
-### Run from bin
-
 ```bash
-make
-qemu-system-x86_64 -kernel kernel.x86.bin
+make run
 ```
-
-### Run from iso (todo)
 
 ## TODO
 
@@ -25,17 +20,17 @@ qemu-system-x86_64 -kernel kernel.x86.bin
   - [ ] Once all of those steps above are done, you can write some helpers like kernel types or basic functions (strlen, strcmp, ...)
   - [ ] Your work must not exceed 10 MB.
   - [ ] Code the interface between your kernel and the screen.
-  - [ ] Display "42" on the screen.
-    - [ ] clean screen
+  - [x] Display "42" on the screen.
+    - [x] clean screen
     - [x] print "42"
   - [ ] Makefile:
     Your makefile must compile all your source files with the right flags and the right compiler. Keep in mind that your kernel will use at least two different languages (ASM and whatever-you-choose), so make (<- joke) your Makefile’s rules correctly
 - [ ] Bonus:
   - [ ] Add scroll and cursor support to your I/O interface.
   - [ ] Add colors support to your I/O interface.
-  - [ ] Add helpers like printf / printk in order to print information / debug easily
-    - [ ] print!
-    - [ ] println!
+  - [x] Add helpers like printf / printk in order to print information / debug easily
+    - [x] print!
+    - [x] println!
   - [ ] Handle keyboard entries and print them.
   - [ ] Handle different screens, and keyboard shortcuts to switch easily between then.
 - [ ] Other:

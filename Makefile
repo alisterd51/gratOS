@@ -29,7 +29,7 @@ all: ${ISO}
 
 ${BIN}:
 	mkdir -p ${OBJDIR}
-	RUSTFLAGS='${RUSTFLAGS}' ${CARGO} +nightly build --release -Z build-std=core,compiler_builtins -Z build-std-features=compiler-builtins-mem --target=arch/x86/target.json
+	RUSTFLAGS='${RUSTFLAGS}' ${CARGO} +nightly build --release -Z build-std=core,compiler_builtins -Z build-std-features=compiler-builtins-mem --target=${TARGETFILE}
 	cp --preserve target/target/release/libkfs_1.a ${OBJDIR}/kernel.a
 	${AS} arch/x86/start.s -o ${OBJDIR}/start.o
 	${LD} -o ${BIN} -T arch/x86/link.ld ${OBJDIR}/start.o ${OBJDIR}/kernel.a
