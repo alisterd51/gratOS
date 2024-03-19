@@ -18,7 +18,7 @@ make run
   - [x] Write basic kernel code of the choosen language.
   - [x] Compile it with correct flags, and link it to make it bootable.
   - [ ] Once all of those steps above are done, you can write some helpers like kernel types or basic functions (strlen, strcmp, ...)
-  - [ ] Your work must not exceed 10 MB.
+  - [x] Your work must not exceed 10 MB.
   - [ ] Code the interface between your kernel and the screen.
   - [x] Display "42" on the screen.
     - [x] clean screen

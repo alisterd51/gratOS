@@ -39,7 +39,7 @@ ${ISO}: ${BIN}
 	mkdir -p ${ISODIR}/boot/grub
 	cp ${BIN} ${ISODIR}/boot/${BIN}
 	cp ${GRUBCFG} ${ISODIR}/boot/grub/grub.cfg
-	grub-mkrescue -o ${ISO} ${ISODIR}
+	grub-mkrescue --compress=xz -o ${ISO} ${ISODIR}
 
 clean:
 	${CARGO} clean
