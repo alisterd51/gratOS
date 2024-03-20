@@ -5,10 +5,9 @@ pub unsafe fn inb(port: u16) -> u8 {
     let value;
     
     asm!(
-        "inb %dx, %al",
-        in("dx") port,
+        "in al, dx",
         out("al") value,
-        options(att_syntax)
+        in("dx") port
     );
     value
 }
@@ -16,9 +15,8 @@ pub unsafe fn inb(port: u16) -> u8 {
 /// Write a one byte data to port
 pub unsafe fn outb(value: u8, port: u16) {
     asm!(
-        "outb %al, %dx",
-        in("dx") port,
+        "out dx, al",
         in("al") value,
-        options(att_syntax)
+        in("dx") port
     );
 }

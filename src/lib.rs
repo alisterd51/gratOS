@@ -2,7 +2,7 @@
 #![no_main]
 
 mod vga_buffer;
-mod sys_io;
+mod io;
 
 use core::panic::PanicInfo;
 

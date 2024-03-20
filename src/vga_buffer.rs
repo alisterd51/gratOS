@@ -169,7 +169,7 @@ pub fn _print(args: fmt::Arguments) {
     WRITER.lock().write_fmt(args).unwrap();
 }
 
-use crate::sys_io::outb;
+use crate::io::outb;
 
 fn set_cursor(x: usize, y: usize) {
     let pos = (y * BUFFER_WIDTH + x) as u16;
