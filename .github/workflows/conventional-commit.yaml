@@ -1,0 +1,13 @@
+name: Conventional commits
+
+on:
+  pull_request: {}
+
+jobs:
+  conventional-commits-checker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      - name: Conventional Commit - Action
+        uses: webiny/action-conventional-commits@8bc41ff4e7d423d56fa4905f6ff79209a78776c7 # v1.3.0
