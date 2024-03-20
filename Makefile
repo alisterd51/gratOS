@@ -1,7 +1,9 @@
+TRIPLE	:= i686-elf
+
 # utlis
-AS		:= i686-elf-as
-LD		:= i686-elf-ld
-OBJDUMP	:= i686-elf-objdump
+AS		:= ${TRIPLE}-as
+LD		:= ${TRIPLE}-ld
+OBJDUMP	:= ${TRIPLE}-objdump
 CARGO	:= cargo
 QEMU	:= qemu-system-x86_64
 
@@ -17,7 +19,7 @@ GRUBCFG	:= grub/grub.cfg
 ASFLAGS		:=
 LDFLAGS		:= --script ${LINKSCRIPT}
 CARGOFLAGS	:= --target=${TARGETFILE}
-RUSTFLAGS	:= --cfg arch__x86 -C soft-float -C panic=abort
+
 
 OBJDIR	:= .obj/${ARCH}
 ISODIR	:= isodir
@@ -29,11 +31,11 @@ all: ${ISO}
 
 ${BIN}:
 	mkdir -p ${OBJDIR}
-	RUSTFLAGS='${RUSTFLAGS}' ${CARGO} +nightly build --release -Z build-std=core,compiler_builtins -Z build-std-features=compiler-builtins-mem --target=${TARGETFILE}
+	${CARGO} +nightly build --release
 	cp --preserve target/target/release/libkfs_1.a ${OBJDIR}/kernel.a
-	${AS} arch/x86/start.s -o ${OBJDIR}/start.o
-	${LD} -o ${BIN} -T arch/x86/link.ld ${OBJDIR}/start.o ${OBJDIR}/kernel.a
-	grub-file --is-x86-multiboot ${BIN}
+	${AS} arch/${ARCH}/start.s -o ${OBJDIR}/start.o
+	${LD} -o ${BIN} -T arch/${ARCH}/link.ld ${OBJDIR}/start.o ${OBJDIR}/kernel.a
+	grub-file --is-${ARCH}-multiboot ${BIN}
 
 ${ISO}: ${BIN}
 	mkdir -p ${ISODIR}/boot/grub
