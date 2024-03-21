@@ -1,4 +1,4 @@
-# KFS-1 (provisional name)
+# gratOS
 
 ## Presentation
 
