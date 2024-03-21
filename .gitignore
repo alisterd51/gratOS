@@ -1,5 +1,7 @@
-/target
-.obj
-isodir
-*.bin
-*.iso
+target
+obj
+**.o
+**.a
+**.d
+**.bin
+**.iso

@@ -1,3 +1,8 @@
+use crate::io::outb;
+use core::fmt;
+use lazy_static::lazy_static;
+use spin::Mutex;
+
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -63,8 +68,8 @@ impl Writer {
 
                 let row = self.row_position;
                 let col = self.column_position;
-
                 let color_code = self.color_code;
+
                 self.buffer.chars[row][col] = ScreenChar {
                     ascii_character: byte,
                     color_code,
@@ -78,19 +83,21 @@ impl Writer {
     fn new_line(&mut self) {
         if self.row_position < BUFFER_HEIGHT - 1 {
             self.row_position += 1;
-        }
-        else {
-            self.next_line();
+        } else {
+            self.scroll_down();
         }
         self.column_position = 0;
         self.update_cursor();
     }
 
-    fn next_line(&mut self) {
+    fn scroll_down(&mut self) {
         for row in 1..BUFFER_HEIGHT {
+            let row_above = row - 1;
+
             for col in 0..BUFFER_WIDTH {
                 let character = self.buffer.chars[row][col];
-                self.buffer.chars[row - 1][col] = character;
+
+                self.buffer.chars[row_above][col] = character;
             }
         }
         self.clear_now(BUFFER_HEIGHT - 1);
@@ -101,6 +108,7 @@ impl Writer {
             ascii_character: b' ',
             color_code: self.color_code,
         };
+
         for col in 0..BUFFER_WIDTH {
             self.buffer.chars[row][col] = blank;
         }
@@ -110,9 +118,9 @@ impl Writer {
         for byte in s.bytes() {
             match byte {
                 // printable ASCII byte or newline
-                0x20..=0x7e | b'\n' => self.write_byte(byte),
+                0x20..=0x7E | b'\n' => self.write_byte(byte),
                 // not part of printable ASCII range
-                _ => self.write_byte(0xfe),
+                _ => self.write_byte(0xFE),
             }
         }
     }
@@ -131,25 +139,11 @@ impl Writer {
     }
 }
 
-use core::fmt;
-use spin::Mutex;
-
-use lazy_static::lazy_static;
-
 impl fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.write_string(s);
         Ok(())
     }
-}
-
-lazy_static! {
-    pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
-        row_position: 0,
-        column_position: 0,
-        color_code: ColorCode::new(Color::LightGray, Color::Black),
-        buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
-    });
 }
 
 #[macro_export]
@@ -169,7 +163,14 @@ pub fn _print(args: fmt::Arguments) {
     WRITER.lock().write_fmt(args).unwrap();
 }
 
-use crate::io::outb;
+lazy_static! {
+    pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
+        row_position: 0,
+        column_position: 0,
+        color_code: ColorCode::new(Color::LightGray, Color::Black),
+        buffer: unsafe { &mut *(0xB8000 as *mut Buffer) },
+    });
+}
 
 fn set_cursor(x: usize, y: usize) {
     let pos = (y * BUFFER_WIDTH + x) as u16;
