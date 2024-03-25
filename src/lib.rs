@@ -3,6 +3,7 @@
 
 mod io;
 mod ps2;
+mod us_qwerty;
 mod vga_buffer;
 
 use core::panic::PanicInfo;

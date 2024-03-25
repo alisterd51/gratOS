@@ -1,4 +1,8 @@
-use crate::{io::inb, vga_buffer};
+use crate::{
+    io::inb,
+    print,
+    us_qwerty::{Key, KeySet, Set, US_QUERTY},
+};
 
 const BUFFER_SIZE: usize = 500;
 
@@ -37,23 +41,156 @@ impl Buffer {
     }
 }
 
-struct KeyCodes {
-    keyccodes: &'static [ScanCodes],
+struct Modifier {
+    left_shift: bool,
+    right_shift: bool,
+    alt: bool,
+    alt_gr: bool,
+    left_control: bool,
+    right_control: bool,
+    caps_lock: bool,
+    num_lock: bool,
+    scroll_lock: bool,
 }
 
-impl KeyCodes {
-    fn new() -> KeyCodes {
-        KeyCodes {
-            keyccodes: US_QUERTY,
+impl Modifier {
+    fn new() -> Modifier {
+        Modifier {
+            left_shift: false,
+            right_shift: false,
+            alt: false,
+            alt_gr: false,
+            left_control: false,
+            right_control: false,
+            caps_lock: false,
+            num_lock: false,
+            scroll_lock: false,
         }
     }
 
-    fn translate(&self, byte: u8) -> Option<u8> {
-        if (byte as usize) < self.keyccodes.len() {
-            SCANCODES_TO_ASCII[self.keyccodes[byte as usize] as usize]
-        } else {
-            None
+    fn shift(&self) -> bool {
+        (self.left_shift | self.right_control) ^ self.caps_lock
+    }
+
+    fn alt(&self) -> bool {
+        self.alt | self.alt_gr
+    }
+
+    fn control(&self) -> bool {
+        self.left_control | self.right_control
+    }
+}
+
+struct Layout {
+    layout: &'static [Option<KeySet>],
+    modifier: Modifier,
+}
+
+impl Layout {
+    fn new() -> Layout {
+        Layout {
+            layout: US_QUERTY,
+            modifier: Modifier::new(),
         }
+    }
+
+    fn translate(&self, byte: u8) -> Option<char> {
+        if (byte as usize) < self.layout.len() {
+            if let Some(set) = self.get_set(byte) {
+                return match set.set_modifier {
+                    Some(set_modifier) => match set_modifier {
+                        crate::us_qwerty::SetModifier::Lowercase => {
+                            if let Key::Char(c) = set.key {
+                                return Some(c);
+                            } else {
+                                return None;
+                            }
+                        }
+                        crate::us_qwerty::SetModifier::Shift => None,
+                        crate::us_qwerty::SetModifier::Alt => None,
+                        crate::us_qwerty::SetModifier::AltShift => None,
+                        crate::us_qwerty::SetModifier::Control => {
+                            if let Key::Char(c) = set.key {
+                                let c = ((c as u8) & 0x0F) as char;
+                                return Some(c);
+                            } else {
+                                return None;
+                            }
+                        }
+                        crate::us_qwerty::SetModifier::ControlAlt => None,
+                        crate::us_qwerty::SetModifier::ControlAltShift => None,
+                        crate::us_qwerty::SetModifier::Num => None,
+                    },
+                    _ => {
+                        if let Key::Char(c) = set.key {
+                            return Some(c);
+                        } else {
+                            return None;
+                        }
+                    }
+                };
+            }
+        }
+        None
+    }
+
+    fn apply_modifier(&mut self, byte: u8) {
+        let pressed = self.is_pressed(byte);
+        let byte = byte & 0x7F;
+
+        if (byte as usize) < self.layout.len() {
+            if let Some(set) = self.get_set(byte) {
+                match set.key {
+                    Key::LCTRL => self.modifier.left_control = pressed,
+                    Key::RCTRL => self.modifier.right_control = pressed,
+                    Key::LSHIFT => self.modifier.left_shift = pressed,
+                    Key::RSHIFT => self.modifier.right_shift = pressed,
+                    Key::LALT => self.modifier.alt = pressed,
+                    Key::RALT => self.modifier.alt_gr = pressed,
+                    Key::CALOCK => {
+                        if pressed {
+                            self.modifier.caps_lock = !self.modifier.caps_lock;
+                        }
+                    }
+                    Key::NLOCK => {
+                        if pressed {
+                            self.modifier.num_lock = !self.modifier.num_lock;
+                        }
+                    }
+                    Key::SLOCK => {
+                        if pressed {
+                            self.modifier.scroll_lock = !self.modifier.scroll_lock;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    fn get_set(&self, byte: u8) -> Option<Set> {
+        if (byte as usize) < self.layout.len() {
+            if let Some(key_set) = self.layout[byte as usize] {
+                if self.modifier.control() && self.modifier.alt() && self.modifier.shift() {
+                    todo!()
+                } else if self.modifier.control() && self.modifier.alt() {
+                    todo!()
+                } else if self.modifier.control() {
+                    return Some(key_set.ctrl);
+                } else if self.modifier.alt() && self.modifier.shift() {
+                    return Some(key_set.alt_shift);
+                } else if self.modifier.alt {
+                    return Some(key_set.alt1);
+                } else if self.modifier.alt_gr {
+                    return Some(key_set.alt2);
+                } else if self.modifier.shift() {
+                    return Some(key_set.shift);
+                } else {
+                    return Some(key_set.not_shift);
+                }
+            }
+        }
+        None
     }
 
     fn is_pressed(&self, byte: u8) -> bool {
@@ -63,14 +200,14 @@ impl KeyCodes {
 
 pub struct Keyboard {
     buffer: Buffer,
-    keycodes: KeyCodes,
+    layout: Layout,
 }
 
 impl Keyboard {
     pub fn new() -> Keyboard {
         Keyboard {
             buffer: Buffer::new(),
-            keycodes: KeyCodes::new(),
+            layout: Layout::new(),
         }
     }
 
@@ -86,282 +223,16 @@ impl Keyboard {
 
     pub fn to_vga_text_mode(&mut self) {
         while let Some(byte) = self.buffer.pop() {
-            if self.keycodes.is_pressed(byte) {
-                if let Some(byte) = self.keycodes.translate(byte) {
-                    vga_buffer::WRITER.lock().write_byte(byte);
+            // TODO: implement inputs on 2 bytes
+            self.layout.apply_modifier(byte);
+            if self.layout.is_pressed(byte) {
+                if let Some(byte) = self.layout.translate(byte) {
+                    print!("{}", byte);
                 }
             }
         }
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum ScanCodes {
-    NoCode,
-    Escape,
-    One,
-    Two,
-    Three,
-    Four,
-    Five,
-    Six,
-    Seven,
-    Eight,
-    Nine,
-    Zero,
-    Dash,
-    Equal,
-    Backspace,
-    Tab,
-    Q,
-    W,
-    E,
-    R,
-    T,
-    Y,
-    U,
-    I,
-    O,
-    P,
-    LeftSquareBracket,
-    RightSquareBracket,
-    Enter,
-    LeftControl,
-    A,
-    S,
-    D,
-    F,
-    G,
-    H,
-    J,
-    K,
-    L,
-    Semicolon,
-    SingleQuote,
-    BackTick,
-    LeftShift,
-    BackSlash,
-    Z,
-    X,
-    C,
-    V,
-    B,
-    N,
-    M,
-    Comma,
-    Dot,
-    Slash,
-    RightShift,
-    KeypadStar,
-    LeftAlt,
-    Space,
-    CapsLock,
-    FOne,
-    FTwo,
-    FThree,
-    FFour,
-    FFive,
-    FSix,
-    FSeven,
-    FEight,
-    FNine,
-    FTen,
-    NumberLock,
-    ScrollLock,
-    KeypadSeven,
-    KeypadEight,
-    KeypadNine,
-    KeypadDash,
-    KeypadFour,
-    KeypadFive,
-    KeypadSix,
-    KeypadPlus,
-    KeypadOne,
-    KeypadTwo,
-    KeypadThree,
-    KeypadZero,
-    KeypadDot,
-    FEleven,
-    FTwelve,
-}
-
-static SCANCODES_TO_ASCII: &'static [Option<u8>] = &[
-    None,
-    None,
-    Some(b'1'),
-    Some(b'2'),
-    Some(b'3'),
-    Some(b'4'),
-    Some(b'5'),
-    Some(b'6'),
-    Some(b'7'),
-    Some(b'8'),
-    Some(b'9'),
-    Some(b'0'),
-    Some(b'-'),
-    Some(b'='),
-    Some(0x08),
-    Some(b'\t'),
-    Some(b'q'),
-    Some(b'w'),
-    Some(b'e'),
-    Some(b'r'),
-    Some(b't'),
-    Some(b'y'),
-    Some(b'u'),
-    Some(b'i'),
-    Some(b'o'),
-    Some(b'p'),
-    Some(b'['),
-    Some(b']'),
-    Some(b'\n'),
-    None,
-    Some(b'a'),
-    Some(b's'),
-    Some(b'd'),
-    Some(b'f'),
-    Some(b'g'),
-    Some(b'h'),
-    Some(b'j'),
-    Some(b'k'),
-    Some(b'l'),
-    Some(b';'),
-    Some(b'\''),
-    Some(b'`'),
-    None,
-    Some(b'\\'),
-    Some(b'z'),
-    Some(b'x'),
-    Some(b'c'),
-    Some(b'v'),
-    Some(b'b'),
-    Some(b'n'),
-    Some(b'm'),
-    Some(b','),
-    Some(b'.'),
-    Some(b'/'),
-    None,
-    Some(b'*'),
-    None,
-    Some(b' '),
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    Some(b'7'),
-    Some(b'8'),
-    Some(b'9'),
-    Some(b'-'),
-    Some(b'4'),
-    Some(b'5'),
-    Some(b'6'),
-    Some(b'+'),
-    Some(b'1'),
-    Some(b'2'),
-    Some(b'3'),
-    Some(b'0'),
-    Some(b'.'),
-    None,
-    None,
-];
-
-// TODO: It is important to remember that the scancode can have modifiers: 'alt', 'shift', 'ctrl', ...
-// this is not done here :(
-
-static US_QUERTY: &'static [ScanCodes] = &[
-    ScanCodes::NoCode,
-    ScanCodes::Escape,
-    ScanCodes::One,
-    ScanCodes::Two,
-    ScanCodes::Three,
-    ScanCodes::Four,
-    ScanCodes::Five,
-    ScanCodes::Six,
-    ScanCodes::Seven,
-    ScanCodes::Eight,
-    ScanCodes::Nine,
-    ScanCodes::Zero,
-    ScanCodes::Dash,
-    ScanCodes::Equal,
-    ScanCodes::Backspace,
-    ScanCodes::Tab,
-    ScanCodes::Q,
-    ScanCodes::W,
-    ScanCodes::E,
-    ScanCodes::R,
-    ScanCodes::T,
-    ScanCodes::Y,
-    ScanCodes::U,
-    ScanCodes::I,
-    ScanCodes::O,
-    ScanCodes::P,
-    ScanCodes::LeftSquareBracket,
-    ScanCodes::RightSquareBracket,
-    ScanCodes::Enter,
-    ScanCodes::LeftControl,
-    ScanCodes::A,
-    ScanCodes::S,
-    ScanCodes::D,
-    ScanCodes::F,
-    ScanCodes::G,
-    ScanCodes::H,
-    ScanCodes::J,
-    ScanCodes::K,
-    ScanCodes::L,
-    ScanCodes::Semicolon,
-    ScanCodes::SingleQuote,
-    ScanCodes::BackTick,
-    ScanCodes::LeftShift,
-    ScanCodes::BackSlash,
-    ScanCodes::Z,
-    ScanCodes::X,
-    ScanCodes::C,
-    ScanCodes::V,
-    ScanCodes::B,
-    ScanCodes::N,
-    ScanCodes::M,
-    ScanCodes::Comma,
-    ScanCodes::Dot,
-    ScanCodes::Slash,
-    ScanCodes::RightShift,
-    ScanCodes::KeypadStar,
-    ScanCodes::LeftAlt,
-    ScanCodes::Space,
-    ScanCodes::CapsLock,
-    ScanCodes::FOne,
-    ScanCodes::FTwo,
-    ScanCodes::FThree,
-    ScanCodes::FFour,
-    ScanCodes::FFive,
-    ScanCodes::FSix,
-    ScanCodes::FSeven,
-    ScanCodes::FEight,
-    ScanCodes::FNine,
-    ScanCodes::FTen,
-    ScanCodes::NumberLock,
-    ScanCodes::ScrollLock,
-    ScanCodes::KeypadSeven,
-    ScanCodes::KeypadEight,
-    ScanCodes::KeypadNine,
-    ScanCodes::KeypadDash,
-    ScanCodes::KeypadFour,
-    ScanCodes::KeypadFive,
-    ScanCodes::KeypadSix,
-    ScanCodes::KeypadPlus,
-    ScanCodes::KeypadOne,
-    ScanCodes::KeypadTwo,
-    ScanCodes::KeypadThree,
-    ScanCodes::KeypadZero,
-    ScanCodes::KeypadDot,
-    ScanCodes::FEleven,
-    ScanCodes::FTwelve,
-];
+// https://github.com/Stichting-MINIX-Research-Foundation/minix/blob/4db99f4012570a577414fe2a43697b2f239b699e/minix/drivers/tty/tty/keymaps/us-std.src
+// https://wiki.osdev.org/PS/2_Keyboard
