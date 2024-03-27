@@ -2,6 +2,8 @@
 #![no_main]
 
 mod io;
+mod ps2;
+mod us_qwerty;
 mod vga_buffer;
 
 use core::panic::PanicInfo;
@@ -19,5 +21,10 @@ pub extern "C" fn kmain() -> ! {
 
     println!("42");
 
-    loop {}
+    let mut keyboard = ps2::Keyboard::new();
+
+    loop {
+        keyboard.get_input();
+        keyboard.to_vga_text_mode();
+    }
 }

@@ -35,6 +35,8 @@ ${addsuffix .rs, \
 	${addprefix src/, \
 		io \
 		lib \
+		ps2 \
+		us_qwerty \
 		vga_buffer \
 	} \
 }
