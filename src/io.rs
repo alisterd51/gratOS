@@ -1,6 +1,8 @@
 use core::arch::asm;
 
 /// Read a one byte data from port
+// TODO: remove `allow(dead_code)` as soon as it will be used elsewhere in the code
+#[allow(dead_code)]
 #[inline(always)]
 pub unsafe fn inb(port: u16) -> u8 {
     let value;
