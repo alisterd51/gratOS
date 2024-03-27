@@ -1,3 +1,5 @@
+use crate::io::outb;
+
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -169,8 +171,6 @@ pub fn _print(args: fmt::Arguments) {
     WRITER.lock().write_fmt(args).unwrap();
 }
 
-use crate::io::outb;
-
 fn set_cursor(x: usize, y: usize) {
     let pos = (y * BUFFER_WIDTH + x) as u16;
 
@@ -180,4 +180,9 @@ fn set_cursor(x: usize, y: usize) {
         outb(0xE, 0x3D4);
         outb(((pos >> 8) & 0xFF) as u8, 0x3D5);
     }
+}
+
+#[inline(always)]
+pub fn clear() {
+    WRITER.lock().clear();
 }
