@@ -164,7 +164,7 @@ pub fn _print(args: fmt::Arguments) {
 }
 
 lazy_static! {
-    pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
+    static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
         row_position: 0,
         column_position: 0,
         color_code: ColorCode::new(Color::LightGray, Color::Black),
@@ -181,4 +181,9 @@ fn set_cursor(x: usize, y: usize) {
         outb(0xE, 0x3D4);
         outb(((pos >> 8) & 0xFF) as u8, 0x3D5);
     }
+}
+
+#[inline(always)]
+pub fn clear() {
+    WRITER.lock().clear();
 }

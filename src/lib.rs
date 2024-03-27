@@ -15,7 +15,7 @@ fn panic(info: &PanicInfo) -> ! {
 #[allow(clippy::empty_loop)]
 #[no_mangle]
 pub extern "C" fn kmain() -> ! {
-    vga_buffer::WRITER.lock().clear();
+    vga_buffer::clear();
 
     println!("42");
 
