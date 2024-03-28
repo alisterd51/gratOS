@@ -33,6 +33,7 @@ ${addsuffix .s, \
 RUST_SRC := \
 ${addsuffix .rs, \
 	${addprefix src/, \
+		ascii_art \
 		io \
 		lib \
 		vga_buffer \
