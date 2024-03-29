@@ -58,7 +58,18 @@ pub struct Writer {
 }
 
 impl Writer {
-    pub fn write_byte(&mut self, byte: u8) {
+    fn write_bytes(&mut self, bytes: &[u8]) {
+        for byte in bytes {
+            match byte {
+                // printable ASCII byte or newline
+                0x20..=0x7E | b'\n' => self.write_byte(*byte),
+                // not part of printable ASCII range
+                _ => self.write_byte(0xFE),
+            }
+        }
+    }
+
+    fn write_byte(&mut self, byte: u8) {
         match byte {
             b'\n' => self.new_line(),
             byte => {
@@ -75,7 +86,7 @@ impl Writer {
                     color_code,
                 };
                 self.column_position += 1;
-                self.update_cursor();
+                self.update_cursor_position();
             }
         }
     }
@@ -87,7 +98,7 @@ impl Writer {
             self.scroll_down();
         }
         self.column_position = 0;
-        self.update_cursor();
+        self.update_cursor_position();
     }
 
     fn scroll_down(&mut self) {
@@ -100,10 +111,10 @@ impl Writer {
                 self.buffer.chars[row_above][col] = character;
             }
         }
-        self.clear_now(BUFFER_HEIGHT - 1);
+        self.clear_row(BUFFER_HEIGHT - 1);
     }
 
-    fn clear_now(&mut self, row: usize) {
+    fn clear_row(&mut self, row: usize) {
         let blank = ScreenChar {
             ascii_character: b' ',
             color_code: self.color_code,
@@ -114,34 +125,23 @@ impl Writer {
         }
     }
 
-    pub fn write_string(&mut self, s: &str) {
-        for byte in s.bytes() {
-            match byte {
-                // printable ASCII byte or newline
-                0x20..=0x7E | b'\n' => self.write_byte(byte),
-                // not part of printable ASCII range
-                _ => self.write_byte(0xFE),
-            }
-        }
-    }
-
-    pub fn clear(&mut self) {
+    fn clear(&mut self) {
         for row in 0..BUFFER_HEIGHT {
-            self.clear_now(row);
+            self.clear_row(row);
         }
         self.row_position = 0;
         self.column_position = 0;
-        self.update_cursor();
+        self.update_cursor_position();
     }
 
-    fn update_cursor(&self) {
-        set_cursor(self.column_position, self.row_position);
+    fn update_cursor_position(&self) {
+        set_cursor_position(self.column_position, self.row_position);
     }
 }
 
 impl fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.write_string(s);
+        self.write_bytes(s.as_bytes());
         Ok(())
     }
 }
@@ -172,7 +172,7 @@ lazy_static! {
     });
 }
 
-fn set_cursor(x: usize, y: usize) {
+fn set_cursor_position(x: usize, y: usize) {
     let pos = (y * BUFFER_WIDTH + x) as u16;
 
     unsafe {
