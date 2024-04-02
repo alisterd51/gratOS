@@ -1,0 +1,48 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "enabled": true,
+  "baseBranches": [
+    "master"
+  ],
+  "commitMessageSuffix": "({{updateType}})",
+  "extends": [
+    "config:best-practices",
+    "default:semanticCommits",
+    ":disableRateLimiting",
+    ":rebaseStalePrs"
+  ],
+  "vulnerabilityAlerts": {
+    "labels": [
+      "security"
+    ],
+    "automerge": true,
+    "assignees": [
+      "@alisterd51"
+    ]
+  },
+  "separateMinorPatch": true,
+  "enabledManagers": [
+    "github-actions",
+    "cargo"
+  ],
+  "packageRules": [
+    {
+      "description": "Automatically merge minor and patch level updates",
+      "matchUpdateTypes": [
+        "patch",
+        "pin",
+        "pinDigest",
+        "digest"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Automatically merge minor and patch level updates",
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true
+    }
+  ]
+}
