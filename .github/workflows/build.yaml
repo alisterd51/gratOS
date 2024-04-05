@@ -25,26 +25,9 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    container: ghcr.io/alisterd51/cross-toolchain:nightly
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
-      - name: install rust nightly
-        run: |
-          rustup toolchain install nightly
-          rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
-      - name: install binutils cross-compiling tools
-        run: |
-          export TARGET=i686-elf
-          wget https://ftp.gnu.org/gnu/binutils/binutils-2.42.tar.xz
-          tar xf binutils-2.42.tar.xz
-          cd binutils-2.42
-          mkdir build
-          cd build
-          ../configure --target=$TARGET --with-sysroot --disable-nls --disable-werror
-          make
-          sudo make install
-      - name: install mformat
-        run: |
-          sudo apt install mtools
       - name: Build
         run: |
           make all
