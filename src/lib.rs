@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 
+mod ascii_art;
 mod io;
 mod vga_buffer;
 
@@ -16,8 +17,6 @@ fn panic(info: &PanicInfo) -> ! {
 #[no_mangle]
 pub extern "C" fn kmain() -> ! {
     vga_buffer::clear();
-
-    println!("42");
-
+    ascii_art::print_42();
     loop {}
 }
