@@ -1,5 +1,5 @@
 use crate::io::outb;
-use core::fmt;
+use core::{fmt, slice::Iter};
 use lazy_static::lazy_static;
 use spin::Mutex;
 
@@ -33,6 +33,14 @@ impl ColorCode {
     const fn new(foreground: Color, background: Color) -> ColorCode {
         ColorCode((background as u8) << 4 | (foreground as u8))
     }
+
+    fn set_foreground(&mut self, foreground: Color) {
+        self.0 = self.0 & 0xF0 | foreground as u8;
+    }
+
+    fn set_background(&mut self, background: Color) {
+        self.0 = self.0 & 0x0F | (background as u8) << 4;
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -58,11 +66,22 @@ pub struct Writer {
 }
 
 impl Writer {
+    // REMIND: Change these constants to variables when we implement the ability to change the
+    // default values.
+    const DEFAULT_BACKGROUND_COLOR: Color = Color::Black;
+    const DEFAULT_FOREGROUND_COLOR: Color = Color::LightGray;
+
     fn write_bytes(&mut self, bytes: &[u8]) {
-        for byte in bytes {
+        let mut bytes = bytes.iter();
+
+        while let Some(byte) = bytes.next() {
             match byte {
-                // printable ASCII byte or newline
-                0x20..=0x7E | b'\n' => self.write_byte(*byte),
+                // printable ASCII byte
+                b' '..=b'~' => self.write_byte(*byte),
+                // newline
+                b'\n' => self.new_line(),
+                // escaped sequence
+                0x1B => self.interpret_escape_sequence(&mut bytes),
                 // not part of printable ASCII range
                 _ => self.write_byte(0xFE),
             }
@@ -70,25 +89,20 @@ impl Writer {
     }
 
     fn write_byte(&mut self, byte: u8) {
-        match byte {
-            b'\n' => self.new_line(),
-            byte => {
-                if self.column_position >= BUFFER_WIDTH {
-                    self.new_line();
-                }
-
-                let row = self.row_position;
-                let col = self.column_position;
-                let color_code = self.color_code;
-
-                self.buffer.chars[row][col] = ScreenChar {
-                    ascii_character: byte,
-                    color_code,
-                };
-                self.column_position += 1;
-                self.update_cursor_position();
-            }
+        if self.column_position >= BUFFER_WIDTH {
+            self.new_line();
         }
+
+        let row = self.row_position;
+        let col = self.column_position;
+        let color_code = self.color_code;
+
+        self.buffer.chars[row][col] = ScreenChar {
+            ascii_character: byte,
+            color_code,
+        };
+        self.column_position += 1;
+        self.update_cursor_position();
     }
 
     fn new_line(&mut self) {
@@ -122,6 +136,73 @@ impl Writer {
 
         for col in 0..BUFFER_WIDTH {
             self.buffer.chars[row][col] = blank;
+        }
+    }
+
+    fn interpret_escape_sequence(&mut self, bytes: &mut Iter<u8>) {
+        if let Some(byte) = bytes.next() {
+            match byte {
+                b'[' => self.interpret_csi_sequence(bytes),
+                _ => panic!("unknown escape sequence"),
+            }
+        } else {
+            panic!("escape sequence ended unexpectedly");
+        }
+    }
+
+    #[allow(clippy::single_match)]
+    fn interpret_csi_sequence(&mut self, bytes: &mut Iter<u8>) {
+        const MAXIMUM_LENGTH: usize = 2;
+
+        let mut parameters = [0; MAXIMUM_LENGTH];
+
+        for (i, byte) in bytes.enumerate() {
+            match byte {
+                b'm' => {
+                    self.interpret_srg_parameters(&parameters);
+                    return;
+                }
+                _ => (),
+            }
+            if i >= MAXIMUM_LENGTH {
+                panic!("CSI sequence too long");
+            }
+            parameters[i] = *byte;
+        }
+        panic!("unknown CSI sequence");
+    }
+
+    fn interpret_srg_parameters(&mut self, parameters: &[u8]) {
+        match parameters {
+            [b'0', 0x00] => {
+                self.color_code
+                    .set_foreground(Self::DEFAULT_FOREGROUND_COLOR);
+                self.color_code
+                    .set_background(Self::DEFAULT_BACKGROUND_COLOR);
+            }
+            [b'3', b'0'] => self.color_code.set_foreground(Color::Black),
+            [b'3', b'1'] => self.color_code.set_foreground(Color::Red),
+            [b'3', b'2'] => self.color_code.set_foreground(Color::Green),
+            [b'3', b'3'] => self.color_code.set_foreground(Color::Yellow),
+            [b'3', b'4'] => self.color_code.set_foreground(Color::Blue),
+            [b'3', b'5'] => self.color_code.set_foreground(Color::Magenta),
+            [b'3', b'6'] => self.color_code.set_foreground(Color::Cyan),
+            [b'3', b'7'] => self.color_code.set_foreground(Color::White),
+            [b'3', b'9'] => self
+                .color_code
+                .set_foreground(Self::DEFAULT_FOREGROUND_COLOR),
+            [b'4', b'0'] => self.color_code.set_background(Color::Black),
+            [b'4', b'1'] => self.color_code.set_background(Color::Red),
+            [b'4', b'2'] => self.color_code.set_background(Color::Green),
+            [b'4', b'3'] => self.color_code.set_background(Color::Yellow),
+            [b'4', b'4'] => self.color_code.set_background(Color::Blue),
+            [b'4', b'5'] => self.color_code.set_background(Color::Magenta),
+            [b'4', b'6'] => self.color_code.set_background(Color::Cyan),
+            [b'4', b'7'] => self.color_code.set_background(Color::White),
+            [b'4', b'9'] => self
+                .color_code
+                .set_background(Self::DEFAULT_BACKGROUND_COLOR),
+            _ => panic!("unknown SRG parameters"),
         }
     }
 
@@ -159,7 +240,8 @@ macro_rules! println {
 
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
-    use core::fmt::Write;
+    use fmt::Write;
+
     WRITER.lock().write_fmt(args).unwrap();
 }
 
@@ -167,7 +249,10 @@ lazy_static! {
     static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
         row_position: 0,
         column_position: 0,
-        color_code: ColorCode::new(Color::LightGray, Color::Black),
+        color_code: ColorCode::new(
+            Writer::DEFAULT_FOREGROUND_COLOR,
+            Writer::DEFAULT_BACKGROUND_COLOR
+        ),
         buffer: unsafe { &mut *(0xB8000 as *mut Buffer) },
     });
 }
