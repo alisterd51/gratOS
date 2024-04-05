@@ -54,7 +54,7 @@ ${OBJ_DIR}/%.o: ${ARCH_DIR}/%.s
 	${AS} $< ${OUTPUT_OPTION}
 
 ${LIB}: ${RUST_SRC}
-	${CARGO} +nightly build
+	${CARGO} build
 
 ${BIN}: ${ASM_OBJ} ${LIB}
 	${LD} -T ${ARCH_DIR}/link.ld ${OUTPUT_OPTION} $^
