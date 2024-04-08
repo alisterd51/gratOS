@@ -1,4 +1,6 @@
 use crate::io::outb;
+use core::fmt;
+use spin::{Lazy, Mutex};
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -80,8 +82,7 @@ impl Writer {
     fn new_line(&mut self) {
         if self.row_position < BUFFER_HEIGHT - 1 {
             self.row_position += 1;
-        }
-        else {
+        } else {
             self.next_line();
         }
         self.column_position = 0;
@@ -133,25 +134,11 @@ impl Writer {
     }
 }
 
-use core::fmt;
-use spin::Mutex;
-
-use lazy_static::lazy_static;
-
 impl fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.write_string(s);
         Ok(())
     }
-}
-
-lazy_static! {
-    pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
-        row_position: 0,
-        column_position: 0,
-        color_code: ColorCode::new(Color::LightGray, Color::Black),
-        buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
-    });
 }
 
 #[macro_export]
@@ -170,6 +157,15 @@ pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
     WRITER.lock().write_fmt(args).unwrap();
 }
+
+static WRITER: Lazy<Mutex<Writer>> = Lazy::new(|| {
+    Mutex::new(Writer {
+        row_position: 0,
+        column_position: 0,
+        color_code: ColorCode::new(Color::LightGray, Color::Black),
+        buffer: unsafe { &mut *(0xB8000 as *mut Buffer) },
+    })
+});
 
 fn set_cursor(x: usize, y: usize) {
     let pos = (y * BUFFER_WIDTH + x) as u16;

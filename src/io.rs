@@ -4,7 +4,7 @@ use core::arch::asm;
 #[allow(dead_code)]
 pub unsafe fn inb(port: u16) -> u8 {
     let value;
-    
+
     asm!(
         "in al, dx",
         out("al") value,
