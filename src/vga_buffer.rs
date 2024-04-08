@@ -1,7 +1,6 @@
 use crate::io::outb;
 use core::fmt;
-use lazy_static::lazy_static;
-use spin::Mutex;
+use spin::{Lazy, Mutex};
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -163,14 +162,14 @@ pub fn _print(args: fmt::Arguments) {
     WRITER.lock().write_fmt(args).unwrap();
 }
 
-lazy_static! {
-    static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
+static WRITER: Lazy<Mutex<Writer>> = Lazy::new(|| {
+    Mutex::new(Writer {
         row_position: 0,
         column_position: 0,
         color_code: ColorCode::new(Color::LightGray, Color::Black),
         buffer: unsafe { &mut *(0xB8000 as *mut Buffer) },
-    });
-}
+    })
+});
 
 fn set_cursor_position(x: usize, y: usize) {
     let pos = (y * BUFFER_WIDTH + x) as u16;
