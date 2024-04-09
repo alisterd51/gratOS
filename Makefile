@@ -35,7 +35,13 @@ ${addsuffix .rs, \
 	${addprefix src/, \
 		io \
 		lib \
-		vga_buffer \
+		${addprefix driver/, \
+			mod \
+			${addprefix vga/, \
+				mod \
+				text_mode \
+			} \
+		} \
 	} \
 }
      LIB := ${CARGO_BUILD_DIR}/lib${NAME}.a
