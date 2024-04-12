@@ -96,10 +96,10 @@ impl Writer {
                 self.buffer.chars[row - 1][col] = character;
             }
         }
-        self.clear_now(BUFFER_HEIGHT - 1);
+        self.clear_row(BUFFER_HEIGHT - 1);
     }
 
-    fn clear_now(&mut self, row: usize) {
+    fn clear_row(&mut self, row: usize) {
         let blank = ScreenChar {
             ascii_character: b' ',
             color_code: self.color_code,
@@ -122,7 +122,7 @@ impl Writer {
 
     pub fn clear(&mut self) {
         for row in 0..BUFFER_HEIGHT {
-            self.clear_now(row);
+            self.clear_row(row);
         }
         self.row_position = 0;
         self.column_position = 0;
