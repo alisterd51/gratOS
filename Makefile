@@ -1,4 +1,5 @@
 TRIPLE	:= i686-elf
+BUILD	:= debug
 
 # utlis
 AS		:= ${TRIPLE}-as
@@ -10,42 +11,50 @@ QEMU	:= qemu-system-x86_64
 ARCH	:= x86
 
 LINKSCRIPT	:= arch/$(ARCH)/link.ld
-TARGETFILE	:= arch/$(ARCH)/target.json
-BIN		:= kernel.${ARCH}.bin
-ISO		:= kernel.${ARCH}.iso
-GRUBCFG	:= grub/grub.cfg
+BIN			:= kernel.${ARCH}.bin
+ISO			:= kernel.${ARCH}.iso
+GRUBCFG		:= grub/grub.cfg
 
 # flags
-ASFLAGS		:=
-LDFLAGS		:= --script ${LINKSCRIPT}
-CARGOFLAGS	:= --target=${TARGETFILE}
+ASFLAGS				:=
+LDFLAGS				:= --script ${LINKSCRIPT}
+CARGOFLAGS.debug	:=
+CARGOFLAGS.release	:= --release
 
+BUILDDIR	:= build/${BUILD}
+OBJDIR		:= ${BUILDDIR}/obj/${ARCH}
+ISODIR		:= ${BUILDDIR}/isodir
 
-OBJDIR	:= .obj/${ARCH}
-ISODIR	:= isodir
+all: iso
 
-COMPILE.AS	= ${AS} ${ASFLAGS} $< -o $@
-LINK		= ${LD} ${LDFLAGS} ${OBJDIR}/start.o ${OBJDIR}/kernel.a -o $@
+bin: ${BUILDDIR}/${BIN}
 
-all: ${ISO}
+iso: ${BUILDDIR}/${ISO}
 
-${BIN}:
-	mkdir -p ${OBJDIR}
-	${CARGO} build --release
-	cp --preserve target/target/release/libgratos.a ${OBJDIR}/kernel.a
+${BUILDDIR}:
+	mkdir -p $@
+
+${OBJDIR}:
+	mkdir -p $@
+
+${BUILDDIR}/${BIN}: ${OBJDIR}
+	${CARGO} build ${CARGOFLAGS.${BUILD}}
+	cp --preserve target/target/${BUILD}/libgratos.a ${OBJDIR}/kernel.a
 	${AS} arch/${ARCH}/start.s -o ${OBJDIR}/start.o
-	${LD} -o ${BIN} -T arch/${ARCH}/link.ld ${OBJDIR}/start.o ${OBJDIR}/kernel.a
-	grub-file --is-${ARCH}-multiboot ${BIN}
+	${LD} -o ${BUILDDIR}/${BIN} -T arch/${ARCH}/link.ld ${OBJDIR}/start.o ${OBJDIR}/kernel.a
+	grub-file --is-${ARCH}-multiboot ${BUILDDIR}/${BIN}
 
-${ISO}: ${BIN}
+${BUILDDIR}/${ISO}: ${BUILDDIR}/${BIN}
 	mkdir -p ${ISODIR}/boot/grub
-	cp ${BIN} ${ISODIR}/boot/${BIN}
+	cp ${BUILDDIR}/${BIN} ${ISODIR}/boot/${BIN}
 	cp ${GRUBCFG} ${ISODIR}/boot/grub/grub.cfg
-	grub-mkrescue --compress=xz -o ${ISO} ${ISODIR}
+	grub-mkrescue --compress=xz -o ${BUILDDIR}/${ISO} ${ISODIR}
 
 clean:
 	${CARGO} clean
-	rm -rf ${OBJDIR} ${ISODIR} ${BIN} ${ISO}
+	rm -rf build
 
-run: ${ISO}
-	${QEMU} -cdrom ${ISO}
+run: iso
+	${QEMU} -cdrom ${BUILDDIR}/${ISO}
+
+.PHONY: all bin iso clean run ${BUILDDIR}/${BIN}

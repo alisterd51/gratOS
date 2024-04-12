@@ -1,5 +1,2 @@
 /target
-.obj
-isodir
-*.bin
-*.iso
+/build
