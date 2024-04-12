@@ -1,4 +1,4 @@
-# KFS-1 (provisional name)
+# gratOS
 
 ## Presentation
 
@@ -34,4 +34,4 @@ make run
   - [ ] Handle keyboard entries and print them.
   - [ ] Handle different screens, and keyboard shortcuts to switch easily between then.
 - [ ] Other:
-  - [ ] add CI to build and serve an iso of kfs
+  - [ ] add CI to build and serve an iso of gratOS

@@ -32,7 +32,7 @@ all: ${ISO}
 ${BIN}:
 	mkdir -p ${OBJDIR}
 	${CARGO} build --release
-	cp --preserve target/target/release/libkfs_1.a ${OBJDIR}/kernel.a
+	cp --preserve target/target/release/libgratos.a ${OBJDIR}/kernel.a
 	${AS} arch/${ARCH}/start.s -o ${OBJDIR}/start.o
 	${LD} -o ${BIN} -T arch/${ARCH}/link.ld ${OBJDIR}/start.o ${OBJDIR}/kernel.a
 	grub-file --is-${ARCH}-multiboot ${BIN}
