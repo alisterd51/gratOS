@@ -39,9 +39,8 @@ ${OBJDIR}:
 
 ${BUILDDIR}/${BIN}: ${OBJDIR}
 	${CARGO} build ${CARGOFLAGS.${BUILD}}
-	cp --preserve target/target/${BUILD}/libgratos.a ${OBJDIR}/kernel.a
 	${AS} arch/${ARCH}/start.s -o ${OBJDIR}/start.o
-	${LD} -o ${BUILDDIR}/${BIN} -T arch/${ARCH}/link.ld ${OBJDIR}/start.o ${OBJDIR}/kernel.a
+	${LD} -o ${BUILDDIR}/${BIN} -T arch/${ARCH}/link.ld ${OBJDIR}/start.o target/target/${BUILD}/libgratos.a
 	grub-file --is-${ARCH}-multiboot ${BUILDDIR}/${BIN}
 
 ${BUILDDIR}/${ISO}: ${BUILDDIR}/${BIN}
