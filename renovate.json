@@ -31,7 +31,7 @@
     {
       "matchManagers": ["github-actions"],
       "matchPackageNames": ["ghcr.io/alisterd51/cross-toolchain"],
-      "matchUpdateTypes": ["pin", "digest"],
+      "matchUpdateTypes": ["pin", "digest", "pinDigest"],
       "enabled": false
     }
   ]
