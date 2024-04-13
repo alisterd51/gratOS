@@ -14,6 +14,16 @@ jobs:
       - name: Build ISO
         run: |
           make iso BUILD=release
+      - name: Create nightly tag
+        uses: actions/github-script@v5
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/nightly',
+              sha: context.sha
+            })
       - name: Release
         uses: softprops/action-gh-release@9d7c94cfd0a1f3ed45544c887983e9fa900f0564 # v2
         with:
