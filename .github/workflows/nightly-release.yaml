@@ -7,6 +7,7 @@ on:
 
 jobs:
   nightly-prerelease:
+    permissions: write-all
     runs-on: ubuntu-latest
     container: ghcr.io/alisterd51/cross-toolchain:nightly
     steps:
