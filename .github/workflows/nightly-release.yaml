@@ -15,7 +15,7 @@ jobs:
         run: |
           make iso BUILD=release
       - name: Create nightly tag
-        uses: actions/github-script@v5
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
         with:
           script: |
             github.rest.git.createRef({
