@@ -20,4 +20,5 @@ jobs:
           files: |
             build/release/kernel.x86.iso
           prerelease: true
-          name: "nightly"
+          name: nightly
+          tag_name: nightly
