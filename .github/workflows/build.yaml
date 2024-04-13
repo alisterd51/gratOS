@@ -25,7 +25,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    container: ghcr.io/alisterd51/cross-toolchain:nightly@sha256:aaacf798f3a2d6ebebf2ce8cc0b3ddbe3ade04e2dcce9879e019790ba6a10e9d
+    container: ghcr.io/alisterd51/cross-toolchain:nightly@sha256:5a3dd1a67d4a27482df5b013a311b0440350fcc387f7dde7a7518c5c8cd0c2e6
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
       - name: Build
