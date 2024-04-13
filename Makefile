@@ -11,8 +11,8 @@ QEMU	:= qemu-system-x86_64
 ARCH	:= x86
 
 LINKSCRIPT	:= arch/$(ARCH)/link.ld
-BIN			:= kernel.${ARCH}.bin
-ISO			:= kernel.${ARCH}.iso
+BIN			:= gratos.${ARCH}.bin
+ISO			:= gratos.${ARCH}.iso
 GRUBCFG		:= grub/grub.cfg
 
 # flags

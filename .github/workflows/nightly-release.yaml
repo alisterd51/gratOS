@@ -37,7 +37,7 @@ jobs:
         uses: softprops/action-gh-release@9d7c94cfd0a1f3ed45544c887983e9fa900f0564 # v2
         with:
           files: |
-            build/release/kernel.x86.iso
+            build/release/gratos.x86.iso
           prerelease: true
           name: nightly
           tag_name: nightly
