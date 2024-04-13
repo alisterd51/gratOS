@@ -19,7 +19,8 @@ make run
   - [x] Compile it with correct flags, and link it to make it bootable.
   - [ ] Once all of those steps above are done, you can write some helpers like kernel types or basic functions (strlen, strcmp, ...)
   - [x] Your work must not exceed 10 MB.
-  - [ ] Code the interface between your kernel and the screen.
+  - [x] Code the interface between your kernel and the screen.
+    - [x] vga text_mode driver
   - [x] Display "42" on the screen.
     - [x] clean screen
     - [x] print "42"
@@ -33,5 +34,5 @@ make run
     - [x] println!
   - [ ] Handle keyboard entries and print them.
   - [ ] Handle different screens, and keyboard shortcuts to switch easily between then.
-- [ ] Other:
-  - [ ] add CI to build and serve an iso of gratOS
+- [x] Other:
+  - [x] add CI to build and serve an iso of gratOS
