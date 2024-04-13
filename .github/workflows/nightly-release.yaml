@@ -14,7 +14,7 @@ jobs:
         run: |
           make iso BUILD=release
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@9d7c94cfd0a1f3ed45544c887983e9fa900f0564 # v2
         with:
           files: |
             build/release/kernel.x86.iso
