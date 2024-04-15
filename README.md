@@ -1,5 +1,7 @@
 # gratOS
 
+[![Nightly Release](https://github.com/alisterd51/gratOS/actions/workflows/nightly-release.yaml/badge.svg)](https://github.com/alisterd51/gratOS/actions/workflows/nightly-release.yaml)
+
 ## Presentation
 
 Kernel from scratch (in rust)
