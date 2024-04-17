@@ -34,7 +34,7 @@ make run
   - [x] Add helpers like printf / printk in order to print information / debug easily
     - [x] print!
     - [x] println!
-  - [ ] Handle keyboard entries and print them.
+  - [x] Handle keyboard entries and print them.
   - [ ] Handle different screens, and keyboard shortcuts to switch easily between then.
 - [x] Other:
   - [x] add CI to build and serve an iso of gratOS
