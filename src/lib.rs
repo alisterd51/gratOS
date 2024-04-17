@@ -5,6 +5,7 @@ mod driver;
 mod io;
 
 use core::panic::PanicInfo;
+use driver::keyboard;
 use driver::vga;
 
 #[panic_handler]
@@ -13,12 +14,16 @@ fn panic(info: &PanicInfo) -> ! {
     loop {}
 }
 
-#[allow(clippy::empty_loop)]
 #[no_mangle]
 pub extern "C" fn kmain() -> ! {
     vga::text_mode::clear();
 
     println!("42");
 
-    loop {}
+    let mut keyboard = keyboard::ps2::Keyboard::new();
+
+    loop {
+        keyboard.get_input();
+        keyboard.interpret_to_vga_text_mode();
+    }
 }
