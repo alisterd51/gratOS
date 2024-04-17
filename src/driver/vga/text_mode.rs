@@ -57,26 +57,49 @@ pub struct Writer {
 }
 
 impl Writer {
-    pub fn write_byte(&mut self, byte: u8) {
+    pub fn apply_byte(&mut self, byte: u8) {
         match byte {
-            b'\n' => self.new_line(),
-            byte => {
-                if self.column_position >= BUFFER_WIDTH {
-                    self.new_line();
-                }
-
-                let row = self.row_position;
-                let col = self.column_position;
-
-                let color_code = self.color_code;
-                self.buffer.chars[row][col] = ScreenChar {
-                    ascii_character: byte,
-                    color_code,
-                };
-                self.column_position += 1;
-                self.update_cursor();
-            }
+            b'\n' | b'\r' => self.new_line(),
+            b'\t' => self.write_string("    "),
+            0x08 => self.backspace(),
+            0x7F => self.delete(),
+            byte => self.write_byte(byte),
         }
+    }
+
+    fn backspace(&mut self) {
+        if self.column_position > 0 {
+            self.column_position -= 1;
+        } else if self.row_position > 0 {
+            self.row_position -= 1;
+            self.column_position = BUFFER_WIDTH - 1;
+        }
+        self.write_ascii(b' ');
+        self.update_cursor();
+    }
+
+    fn delete(&mut self) {
+        self.write_ascii(b' ');
+    }
+
+    fn write_byte(&mut self, byte: u8) {
+        if self.column_position >= BUFFER_WIDTH {
+            self.new_line();
+        }
+        self.write_ascii(byte);
+        self.column_position += 1;
+        self.update_cursor();
+    }
+
+    fn write_ascii(&mut self, byte: u8) {
+        let row = self.row_position;
+        let col = self.column_position;
+        let color_code = self.color_code;
+
+        self.buffer.chars[row][col] = ScreenChar {
+            ascii_character: byte,
+            color_code,
+        };
     }
 
     fn new_line(&mut self) {
@@ -112,10 +135,8 @@ impl Writer {
     pub fn write_string(&mut self, s: &str) {
         for byte in s.bytes() {
             match byte {
-                // printable ASCII byte or newline
-                0x20..=0x7e | b'\n' => self.write_byte(byte),
-                // not part of printable ASCII range
-                _ => self.write_byte(0xfe),
+                0x20..=0x7E | b'\n' | b'\r' | b'\t' | 0x08 | 0x7F => self.apply_byte(byte),
+                _ => self.apply_byte(0xfe),
             }
         }
     }
