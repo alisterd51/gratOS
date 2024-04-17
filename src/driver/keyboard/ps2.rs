@@ -33,7 +33,7 @@ impl KeyModifier {
     }
 
     fn shift(&self) -> bool {
-        (self.left_shift | self.right_control) ^ self.caps_lock
+        (self.left_shift | self.right_shift) ^ self.caps_lock
     }
 
     fn alt(&self) -> bool {
