@@ -1,8 +1,10 @@
 #![no_std]
 #![no_main]
+#![feature(c_size_t)]
 
 mod driver;
 mod io;
+mod string;
 
 use core::panic::PanicInfo;
 use driver::keyboard;
