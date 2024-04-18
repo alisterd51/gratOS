@@ -8,8 +8,19 @@ Kernel from scratch (in rust)
 
 ## Run
 
+### From source
+
 ```bash
+git clone https://github.com/alisterd51/gratOS.git
+cd gratOS
 make run
+```
+
+### From nightly release
+
+```bash
+wget https://github.com/alisterd51/gratOS/releases/download/nightly/gratos.x86.iso
+qemu-system-x86_64 -cdrom gratos.x86.iso
 ```
 
 ## TODO
