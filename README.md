@@ -46,6 +46,9 @@ qemu-system-x86_64 -cdrom gratos.x86.iso
       Your makefile must compile all your source files with the right flags and the right compiler. Keep in mind that your kernel will use at least two different languages (ASM and whatever-you-choose), so make (<- joke) your Makefile’s rules correctly
   - [ ] Bonus:
     - [ ] Add scroll and cursor support to your I/O interface.
+      - [x] scroll
+      - [x] cursor
+      - [ ] history
     - [ ] Add colors support to your I/O interface.
     - [x] Add helpers like printf / printk in order to print information / debug easily
       - [x] print!
