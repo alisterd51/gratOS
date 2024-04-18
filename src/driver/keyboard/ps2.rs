@@ -1,4 +1,8 @@
-use crate::{driver::keyboard::ScanCodeSet, io::inb, print};
+use crate::{
+    driver::{keyboard::ScanCodeSet, vga},
+    io::inb,
+    print,
+};
 
 use super::{
     fifo_buffer::FifoBuffer,
@@ -138,6 +142,26 @@ impl Keyboard {
             KeymapValue::Delete => {
                 if pressed {
                     print!("{}", 0x7F as char);
+                }
+            }
+            KeymapValue::Right | KeymapValue::AltRight | KeymapValue::ControlRight => {
+                if pressed {
+                    vga::text_mode::cursor_right();
+                }
+            }
+            KeymapValue::Left | KeymapValue::AltLeft | KeymapValue::ControlLeft => {
+                if pressed {
+                    vga::text_mode::cursor_left();
+                }
+            }
+            KeymapValue::Down | KeymapValue::AltDown | KeymapValue::ControlDown => {
+                if pressed {
+                    vga::text_mode::cursor_down();
+                }
+            }
+            KeymapValue::Up | KeymapValue::AltUp | KeymapValue::ControlUp => {
+                if pressed {
+                    vga::text_mode::cursor_up();
                 }
             }
         }

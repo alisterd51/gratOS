@@ -83,11 +83,12 @@ impl Writer {
     }
 
     fn write_byte(&mut self, byte: u8) {
-        if self.column_position >= BUFFER_WIDTH {
-            self.new_line();
-        }
         self.write_ascii(byte);
-        self.column_position += 1;
+        if self.column_position + 1 >= BUFFER_WIDTH {
+            self.new_line();
+        } else {
+            self.column_position += 1;
+        }
         self.update_cursor();
     }
 
@@ -112,6 +113,16 @@ impl Writer {
         self.update_cursor();
     }
 
+    fn old_line(&mut self) {
+        if self.row_position > 0 {
+            self.row_position -= 1;
+        } else {
+            self.previous_line();
+        }
+        self.column_position = BUFFER_WIDTH - 1;
+        self.update_cursor();
+    }
+
     fn next_line(&mut self) {
         for row in 1..BUFFER_HEIGHT {
             for col in 0..BUFFER_WIDTH {
@@ -120,6 +131,16 @@ impl Writer {
             }
         }
         self.clear_row(BUFFER_HEIGHT - 1);
+    }
+
+    fn previous_line(&mut self) {
+        for row in (0..BUFFER_HEIGHT - 1).rev() {
+            for col in 0..BUFFER_WIDTH {
+                let character = self.buffer.chars[row][col];
+                self.buffer.chars[row + 1][col] = character;
+            }
+        }
+        self.clear_row(0);
     }
 
     fn clear_row(&mut self, row: usize) {
@@ -147,6 +168,46 @@ impl Writer {
         }
         self.row_position = 0;
         self.column_position = 0;
+        self.update_cursor();
+    }
+
+    pub fn cursor_right(&mut self) {
+        if self.column_position + 1 >= BUFFER_WIDTH {
+            self.new_line();
+        } else {
+            self.column_position += 1;
+        }
+        self.update_cursor();
+    }
+
+    pub fn cursor_left(&mut self) {
+        if self.column_position == 0 {
+            self.old_line();
+        } else {
+            self.column_position -= 1;
+        }
+        self.update_cursor();
+    }
+
+    pub fn cursor_down(&mut self) {
+        if self.row_position + 1 >= BUFFER_HEIGHT {
+            let col = self.column_position;
+            self.new_line();
+            self.column_position = col;
+        } else {
+            self.row_position += 1;
+        }
+        self.update_cursor();
+    }
+
+    pub fn cursor_up(&mut self) {
+        if self.row_position == 0 {
+            let col = self.column_position;
+            self.old_line();
+            self.column_position = col;
+        } else {
+            self.row_position -= 1;
+        }
         self.update_cursor();
     }
 
@@ -202,4 +263,24 @@ fn set_cursor(x: usize, y: usize) {
 #[inline(always)]
 pub fn clear() {
     WRITER.lock().clear();
+}
+
+#[inline(always)]
+pub fn cursor_right() {
+    WRITER.lock().cursor_right();
+}
+
+#[inline(always)]
+pub fn cursor_left() {
+    WRITER.lock().cursor_left();
+}
+
+#[inline(always)]
+pub fn cursor_down() {
+    WRITER.lock().cursor_down();
+}
+
+#[inline(always)]
+pub fn cursor_up() {
+    WRITER.lock().cursor_up();
 }

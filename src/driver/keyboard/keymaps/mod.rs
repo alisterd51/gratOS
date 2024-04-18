@@ -19,6 +19,18 @@ pub enum KeymapValue {
     RightShift,
     RightAlt,
     Delete,
+    Right,
+    AltRight,
+    ControlRight,
+    Left,
+    AltLeft,
+    ControlLeft,
+    Down,
+    AltDown,
+    ControlDown,
+    Up,
+    AltUp,
+    ControlUp,
 }
 
 #[derive(Clone, Copy)]

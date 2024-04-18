@@ -455,10 +455,38 @@ pub const US_QUERTY_KEYMAP: Keymap = {
     keymap[ScanCodeValue::Delete as usize] = None;
     keymap[ScanCodeValue::End as usize] = None;
     keymap[ScanCodeValue::PageDown as usize] = None;
-    keymap[ScanCodeValue::CursorRight as usize] = None;
-    keymap[ScanCodeValue::CursorLeft as usize] = None;
-    keymap[ScanCodeValue::CursorDown as usize] = None;
-    keymap[ScanCodeValue::CursorUp as usize] = None;
+    keymap[ScanCodeValue::CursorRight as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::Right,
+        shift: KeymapValue::Right,
+        alt1: KeymapValue::AltRight,
+        alt2: KeymapValue::AltRight,
+        alt_shift: KeymapValue::AltRight,
+        ctrl: KeymapValue::ControlRight,
+    });
+    keymap[ScanCodeValue::CursorLeft as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::Left,
+        shift: KeymapValue::Left,
+        alt1: KeymapValue::AltLeft,
+        alt2: KeymapValue::AltLeft,
+        alt_shift: KeymapValue::AltLeft,
+        ctrl: KeymapValue::ControlLeft,
+    });
+    keymap[ScanCodeValue::CursorDown as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::Down,
+        shift: KeymapValue::Down,
+        alt1: KeymapValue::AltDown,
+        alt2: KeymapValue::AltDown,
+        alt_shift: KeymapValue::AltDown,
+        ctrl: KeymapValue::ControlDown,
+    });
+    keymap[ScanCodeValue::CursorUp as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::Up,
+        shift: KeymapValue::Up,
+        alt1: KeymapValue::AltUp,
+        alt2: KeymapValue::AltUp,
+        alt_shift: KeymapValue::AltUp,
+        ctrl: KeymapValue::ControlUp,
+    });
     keymap[ScanCodeValue::NumberLock as usize] = Some(KeymapSet {
         not_shift: KeymapValue::NumberLock,
         shift: KeymapValue::NumberLock,
