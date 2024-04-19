@@ -268,15 +268,15 @@ const SCAN_CODE_SET_1_1: [Option<ScanCodeValue>; 0x70] = {
 };
 
 struct ScanCodeSet {
-    scan_code_set_1_0: [Option<ScanCodeValue>; 0x60],
-    scan_code_set_1_1: [Option<ScanCodeValue>; 0x70],
+    scan_code_set_1_0: &'static [Option<ScanCodeValue>; 0x60],
+    scan_code_set_1_1: &'static [Option<ScanCodeValue>; 0x70],
 }
 
 impl ScanCodeSet {
     fn new() -> ScanCodeSet {
         ScanCodeSet {
-            scan_code_set_1_0: SCAN_CODE_SET_1_0,
-            scan_code_set_1_1: SCAN_CODE_SET_1_1,
+            scan_code_set_1_0: &SCAN_CODE_SET_1_0,
+            scan_code_set_1_1: &SCAN_CODE_SET_1_1,
         }
     }
 
