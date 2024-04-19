@@ -52,7 +52,7 @@ impl KeyModifier {
 pub struct Keyboard {
     buffer: FifoBuffer,
     key_modifier: KeyModifier,
-    keymap: Keymap,
+    keymap: &'static Keymap,
     scan_code_set: ScanCodeSet,
 }
 
@@ -61,7 +61,7 @@ impl Keyboard {
         Keyboard {
             buffer: FifoBuffer::new(),
             key_modifier: KeyModifier::new(),
-            keymap: US_QUERTY_KEYMAP,
+            keymap: &US_QUERTY_KEYMAP,
             scan_code_set: ScanCodeSet::new(),
         }
     }
