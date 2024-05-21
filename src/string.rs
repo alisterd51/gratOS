@@ -12,6 +12,25 @@ pub unsafe extern "C" fn memcpy(dest: *mut c_void, src: *const c_void, n: c_size
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn memmove(
+    dest: *mut c_void,
+    src: *const c_void,
+    n: c_size_t,
+) -> *mut c_void {
+    if (dest as *const c_void) < src {
+        memcpy(dest, src, n)
+    } else {
+        let mut i: c_size_t = n;
+
+        while 0 < i {
+            i -= 1;
+            *(dest as *mut c_char).wrapping_add(i) = *(src as *const c_char).wrapping_add(i);
+        }
+        dest
+    }
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn memset(dest: *mut c_void, c: c_int, n: c_size_t) -> *mut c_void {
     let mut i: c_size_t = 0;
 
