@@ -34,6 +34,7 @@ qemu-system-x86_64 -cdrom gratos.x86.iso
     - [x] Once all of those steps above are done, you can write some helpers like kernel types or basic functions (strlen, strcmp, ...)
       - [x] string.h
         - [x] memcpy
+        - [x] memmove
         - [x] memset
         - [x] memcmp
     - [x] Your work must not exceed 10 MB.
@@ -45,10 +46,10 @@ qemu-system-x86_64 -cdrom gratos.x86.iso
     - [x] Makefile:
       Your makefile must compile all your source files with the right flags and the right compiler. Keep in mind that your kernel will use at least two different languages (ASM and whatever-you-choose), so make (<- joke) your Makefile’s rules correctly
   - [ ] Bonus:
-    - [ ] Add scroll and cursor support to your I/O interface.
+    - [x] Add scroll and cursor support to your I/O interface.
       - [x] scroll
       - [x] cursor
-      - [ ] history
+      - [x] history
     - [ ] Add colors support to your I/O interface.
     - [x] Add helpers like printf / printk in order to print information / debug easily
       - [x] print!
