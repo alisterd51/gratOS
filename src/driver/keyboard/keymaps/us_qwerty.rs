@@ -429,18 +429,102 @@ pub const US_QUERTY_KEYMAP: Keymap = {
         alt_shift: KeymapValue::CapsLock,
         ctrl: KeymapValue::CapsLock,
     });
-    keymap[ScanCodeValue::F1 as usize] = None;
-    keymap[ScanCodeValue::F2 as usize] = None;
-    keymap[ScanCodeValue::F3 as usize] = None;
-    keymap[ScanCodeValue::F4 as usize] = None;
-    keymap[ScanCodeValue::F5 as usize] = None;
-    keymap[ScanCodeValue::F6 as usize] = None;
-    keymap[ScanCodeValue::F7 as usize] = None;
-    keymap[ScanCodeValue::F8 as usize] = None;
-    keymap[ScanCodeValue::F9 as usize] = None;
-    keymap[ScanCodeValue::F10 as usize] = None;
-    keymap[ScanCodeValue::F11 as usize] = None;
-    keymap[ScanCodeValue::F12 as usize] = None;
+    keymap[ScanCodeValue::F1 as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::F1,
+        shift: KeymapValue::SF1,
+        alt1: KeymapValue::AF1,
+        alt2: KeymapValue::AF1,
+        alt_shift: KeymapValue::ASF1,
+        ctrl: KeymapValue::CF1,
+    });
+    keymap[ScanCodeValue::F2 as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::F2,
+        shift: KeymapValue::SF2,
+        alt1: KeymapValue::AF2,
+        alt2: KeymapValue::AF2,
+        alt_shift: KeymapValue::ASF2,
+        ctrl: KeymapValue::CF2,
+    });
+    keymap[ScanCodeValue::F3 as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::F3,
+        shift: KeymapValue::SF3,
+        alt1: KeymapValue::AF3,
+        alt2: KeymapValue::AF3,
+        alt_shift: KeymapValue::ASF3,
+        ctrl: KeymapValue::CF3,
+    });
+    keymap[ScanCodeValue::F4 as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::F4,
+        shift: KeymapValue::SF4,
+        alt1: KeymapValue::AF4,
+        alt2: KeymapValue::AF4,
+        alt_shift: KeymapValue::ASF4,
+        ctrl: KeymapValue::CF4,
+    });
+    keymap[ScanCodeValue::F5 as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::F5,
+        shift: KeymapValue::SF5,
+        alt1: KeymapValue::AF5,
+        alt2: KeymapValue::AF5,
+        alt_shift: KeymapValue::ASF5,
+        ctrl: KeymapValue::CF5,
+    });
+    keymap[ScanCodeValue::F6 as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::F6,
+        shift: KeymapValue::SF6,
+        alt1: KeymapValue::AF6,
+        alt2: KeymapValue::AF6,
+        alt_shift: KeymapValue::ASF6,
+        ctrl: KeymapValue::CF6,
+    });
+    keymap[ScanCodeValue::F7 as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::F7,
+        shift: KeymapValue::SF7,
+        alt1: KeymapValue::AF7,
+        alt2: KeymapValue::AF7,
+        alt_shift: KeymapValue::ASF7,
+        ctrl: KeymapValue::CF7,
+    });
+    keymap[ScanCodeValue::F8 as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::F8,
+        shift: KeymapValue::SF8,
+        alt1: KeymapValue::AF8,
+        alt2: KeymapValue::AF8,
+        alt_shift: KeymapValue::ASF8,
+        ctrl: KeymapValue::CF8,
+    });
+    keymap[ScanCodeValue::F9 as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::F9,
+        shift: KeymapValue::SF9,
+        alt1: KeymapValue::AF9,
+        alt2: KeymapValue::AF9,
+        alt_shift: KeymapValue::ASF9,
+        ctrl: KeymapValue::CF9,
+    });
+    keymap[ScanCodeValue::F10 as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::F10,
+        shift: KeymapValue::SF10,
+        alt1: KeymapValue::AF10,
+        alt2: KeymapValue::AF10,
+        alt_shift: KeymapValue::ASF10,
+        ctrl: KeymapValue::CF10,
+    });
+    keymap[ScanCodeValue::F11 as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::F11,
+        shift: KeymapValue::SF11,
+        alt1: KeymapValue::AF11,
+        alt2: KeymapValue::AF11,
+        alt_shift: KeymapValue::ASF11,
+        ctrl: KeymapValue::CF11,
+    });
+    keymap[ScanCodeValue::F12 as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::F12,
+        shift: KeymapValue::SF12,
+        alt1: KeymapValue::AF12,
+        alt2: KeymapValue::AF12,
+        alt_shift: KeymapValue::ASF12,
+        ctrl: KeymapValue::CF12,
+    });
     keymap[ScanCodeValue::ScrollLock as usize] = Some(KeymapSet {
         not_shift: KeymapValue::ScrollLock,
         shift: KeymapValue::ScrollLock,

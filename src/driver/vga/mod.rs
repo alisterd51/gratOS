@@ -4,6 +4,7 @@ pub mod text_mode;
 const BUFFER_HEIGHT: usize = 25;
 const BUFFER_WIDTH: usize = 80;
 const HISTORY_BUFFER_HEIGHT: usize = 1000;
+const NUMBER_OF_REGULAR_TTY: usize = 12;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
