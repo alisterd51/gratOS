@@ -55,7 +55,7 @@ qemu-system-x86_64 -cdrom gratos.x86.iso
       - [x] print!
       - [x] println!
     - [x] Handle keyboard entries and print them.
-    - [ ] Handle different screens, and keyboard shortcuts to switch easily between then.
+    - [x] Handle different screens, and keyboard shortcuts to switch easily between then.
 - [ ] KFS-2 (gratOS:0.2.0):
   - [ ] Mandatory:
     - [ ] create a Global Descriptor Table
