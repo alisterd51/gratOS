@@ -164,6 +164,67 @@ impl Keyboard {
                     vga::text_mode::cursor_up();
                 }
             }
+            KeymapValue::F1 => {
+                if pressed {
+                    vga::text_mode::change_tty(0);
+                }
+            }
+            KeymapValue::F2 => {
+                if pressed {
+                    vga::text_mode::change_tty(1);
+                }
+            }
+            KeymapValue::F3 => {
+                if pressed {
+                    vga::text_mode::change_tty(2);
+                }
+            }
+            KeymapValue::F4 => {
+                if pressed {
+                    vga::text_mode::change_tty(3);
+                }
+            }
+            KeymapValue::F5 => {
+                if pressed {
+                    vga::text_mode::change_tty(4);
+                }
+            }
+            KeymapValue::F6 => {
+                if pressed {
+                    vga::text_mode::change_tty(5);
+                }
+            }
+            KeymapValue::F7 => {
+                if pressed {
+                    vga::text_mode::change_tty(6);
+                }
+            }
+            KeymapValue::F8 => {
+                if pressed {
+                    vga::text_mode::change_tty(7);
+                }
+            }
+            KeymapValue::F9 => {
+                if pressed {
+                    vga::text_mode::change_tty(8);
+                }
+            }
+            KeymapValue::F10 => {
+                if pressed {
+                    vga::text_mode::change_tty(9);
+                }
+            }
+            KeymapValue::F11 => {
+                if pressed {
+                    vga::text_mode::change_tty(10);
+                }
+            }
+            KeymapValue::F12 => {
+                if pressed {
+                    vga::text_mode::change_tty(11);
+                }
+            }
+            _ => {}
         }
     }
 
