@@ -1,12 +1,12 @@
 use super::{
-    Color, ColorCode, ScreenChar, BUFFER_HEIGHT, BUFFER_WIDTH, HISTORY_BUFFER_HEIGHT,
+    ScreenChar, BUFFER_HEIGHT, BUFFER_WIDTH, DEFAULT_COLOR_CODE, HISTORY_BUFFER_HEIGHT,
     NUMBER_OF_REGULAR_TTY,
 };
 
 static mut BUFFER: &mut [[[ScreenChar; BUFFER_WIDTH]; HISTORY_BUFFER_HEIGHT];
          NUMBER_OF_REGULAR_TTY] = &mut [[[ScreenChar {
     ascii_character: b' ',
-    color_code: ColorCode::new(Color::LightGray, Color::Black),
+    color_code: DEFAULT_COLOR_CODE,
 }; BUFFER_WIDTH]; HISTORY_BUFFER_HEIGHT];
     NUMBER_OF_REGULAR_TTY];
 
@@ -96,7 +96,7 @@ impl HistoryBuffer {
         }
         let new_line = [ScreenChar {
             ascii_character: b' ',
-            color_code: ColorCode::new(Color::LightGray, Color::Black),
+            color_code: DEFAULT_COLOR_CODE,
         }; BUFFER_WIDTH];
         self.chars[self.tty_id][(self.history_descriptors[self.tty_id].end + BUFFER_HEIGHT - 1)
             % HISTORY_BUFFER_HEIGHT] = new_line;

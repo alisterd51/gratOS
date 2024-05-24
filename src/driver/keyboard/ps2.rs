@@ -1,5 +1,9 @@
 use crate::{
-    driver::{keyboard::ScanCodeSet, vga},
+    driver::{
+        keyboard::ScanCodeSet,
+        tty::{CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT, CURSOR_UP},
+        vga,
+    },
     io::inb,
     print,
 };
@@ -146,22 +150,22 @@ impl Keyboard {
             }
             KeymapValue::Right | KeymapValue::AltRight | KeymapValue::ControlRight => {
                 if pressed {
-                    vga::text_mode::cursor_right();
+                    print!("{}", CURSOR_RIGHT);
                 }
             }
             KeymapValue::Left | KeymapValue::AltLeft | KeymapValue::ControlLeft => {
                 if pressed {
-                    vga::text_mode::cursor_left();
+                    print!("{}", CURSOR_LEFT);
                 }
             }
             KeymapValue::Down | KeymapValue::AltDown | KeymapValue::ControlDown => {
                 if pressed {
-                    vga::text_mode::cursor_down();
+                    print!("{}", CURSOR_DOWN);
                 }
             }
             KeymapValue::Up | KeymapValue::AltUp | KeymapValue::ControlUp => {
                 if pressed {
-                    vga::text_mode::cursor_up();
+                    print!("{}", CURSOR_UP);
                 }
             }
             KeymapValue::F1 => {

@@ -1,6 +1,6 @@
 use super::{
     history_buffer::HistoryBuffer, Color, ColorCode, ScreenChar, BUFFER_HEIGHT, BUFFER_WIDTH,
-    NUMBER_OF_REGULAR_TTY,
+    DEFAULT_BACKFROUND_COLOR, DEFAULT_COLOR_CODE, DEFAULT_FOREFROUND_COLOR, NUMBER_OF_REGULAR_TTY,
 };
 use crate::io::outb;
 use core::fmt;
@@ -23,12 +23,26 @@ impl TtyDescriptor {
         TtyDescriptor {
             row_position: 0,
             column_position: 0,
-            color_code: ColorCode::new(Color::LightGray, Color::Black),
+            color_code: DEFAULT_COLOR_CODE,
         }
     }
 }
 
+#[derive(Clone, Copy)]
+enum CsiParam {
+    Undefined,
+    Defined(u32),
+    Invalid,
+}
+
+enum EscapeState {
+    Normal,
+    Esc,
+    Csi(CsiParam),
+}
+
 struct Writer {
+    escape_state: EscapeState,
     tty_id: usize,
     tty_descriptors: [TtyDescriptor; NUMBER_OF_REGULAR_TTY],
     buffer: &'static mut Buffer,
@@ -36,13 +50,115 @@ struct Writer {
 }
 
 impl Writer {
-    pub fn apply_byte(&mut self, byte: u8) {
+    fn apply_byte(&mut self, byte: u8) {
         match byte {
             b'\n' | b'\r' => self.new_line(),
             b'\t' => self.write_string("    "),
             0x08 => self.backspace(),
             0x7F => self.delete(),
-            byte => self.write_byte(byte),
+            0x1B => self.escape_state = EscapeState::Esc,
+            byte @ b' '..=b'~' => match self.escape_state {
+                EscapeState::Normal => self.write_byte(byte),
+                EscapeState::Esc => {
+                    self.escape_state = match byte {
+                        b'[' => EscapeState::Csi(CsiParam::Undefined),
+                        _ => EscapeState::Normal,
+                    };
+                }
+                EscapeState::Csi(n) => {
+                    self.escape_state =
+                        match byte {
+                            byte @ b'@'..=b'~' => {
+                                match byte {
+                                    byte @ b'A'..=b'D' => {
+                                        let mut n = match n {
+                                            CsiParam::Defined(n) => n,
+                                            CsiParam::Undefined => 1,
+                                            CsiParam::Invalid => 0,
+                                        };
+                                        while n > 0 {
+                                            match byte {
+                                                b'A' => self.cursor_up(),
+                                                b'B' => self.cursor_down(),
+                                                b'C' => self.cursor_right(),
+                                                b'D' => self.cursor_left(),
+                                                _ => {}
+                                            }
+                                            n -= 1;
+                                        }
+                                    }
+                                    b'm' => match n {
+                                        CsiParam::Undefined => {
+                                            self.update_color(DEFAULT_COLOR_CODE);
+                                        }
+                                        CsiParam::Defined(n) => match n {
+                                            0 => self.update_color(DEFAULT_COLOR_CODE),
+                                            30 => self.update_foreground_color(Color::Black),
+                                            31 => self.update_foreground_color(Color::Red),
+                                            32 => self.update_foreground_color(Color::Green),
+                                            33 => self.update_foreground_color(Color::Brown),
+                                            34 => self.update_foreground_color(Color::Blue),
+                                            35 => self.update_foreground_color(Color::Magenta),
+                                            36 => self.update_foreground_color(Color::Cyan),
+                                            37 => self.update_foreground_color(Color::LightGray),
+                                            39 => self
+                                                .update_foreground_color(DEFAULT_FOREFROUND_COLOR),
+                                            40 => self.update_background_color(Color::Black),
+                                            41 => self.update_background_color(Color::Red),
+                                            42 => self.update_background_color(Color::Green),
+                                            43 => self.update_background_color(Color::Brown),
+                                            44 => self.update_background_color(Color::Blue),
+                                            45 => self.update_background_color(Color::Magenta),
+                                            46 => self.update_background_color(Color::Cyan),
+                                            47 => self.update_background_color(Color::LightGray),
+                                            49 => self
+                                                .update_background_color(DEFAULT_BACKFROUND_COLOR),
+                                            90 => self.update_foreground_color(Color::DarkGray),
+                                            91 => self.update_foreground_color(Color::LightRed),
+                                            92 => self.update_foreground_color(Color::LightGreen),
+                                            93 => self.update_foreground_color(Color::Yellow),
+                                            94 => self.update_foreground_color(Color::LightBlue),
+                                            95 => self.update_foreground_color(Color::Pink),
+                                            96 => self.update_foreground_color(Color::LightCyan),
+                                            97 => self.update_foreground_color(Color::White),
+                                            100 => self.update_background_color(Color::DarkGray),
+                                            101 => self.update_background_color(Color::LightRed),
+                                            102 => self.update_background_color(Color::LightGreen),
+                                            103 => self.update_background_color(Color::Yellow),
+                                            104 => self.update_background_color(Color::LightBlue),
+                                            105 => self.update_background_color(Color::Pink),
+                                            106 => self.update_background_color(Color::LightCyan),
+                                            107 => self.update_background_color(Color::White),
+                                            _ => {}
+                                        },
+                                        CsiParam::Invalid => {}
+                                    },
+                                    _ => {}
+                                }
+                                EscapeState::Normal
+                            }
+                            byte => match byte {
+                                byte @ b'0'..=b'9' => {
+                                    let digit = (byte - b'0') as u32;
+                                    let csi_param = match n {
+                                        CsiParam::Undefined => {
+                                            if digit == 0 {
+                                                CsiParam::Undefined
+                                            } else {
+                                                CsiParam::Defined(digit)
+                                            }
+                                        }
+                                        CsiParam::Defined(n) => CsiParam::Defined(n * 10 + digit),
+                                        CsiParam::Invalid => CsiParam::Invalid,
+                                    };
+                                    EscapeState::Csi(csi_param)
+                                }
+                                _ => EscapeState::Csi(CsiParam::Invalid),
+                            },
+                        };
+                }
+            },
+            _ => self.write_byte(0xFE),
         }
     }
 
@@ -142,12 +258,9 @@ impl Writer {
         }
     }
 
-    pub fn write_string(&mut self, s: &str) {
+    fn write_string(&mut self, s: &str) {
         for byte in s.bytes() {
-            match byte {
-                0x20..=0x7E | b'\n' | b'\r' | b'\t' | 0x08 | 0x7F => self.apply_byte(byte),
-                _ => self.apply_byte(0xfe),
-            }
+            self.apply_byte(byte);
         }
     }
 
@@ -218,6 +331,22 @@ impl Writer {
             self.update_cursor();
         }
     }
+
+    fn update_color(&mut self, color_code: ColorCode) {
+        self.tty_descriptors[self.tty_id].color_code = color_code;
+    }
+
+    pub fn update_foreground_color(&mut self, color: Color) {
+        self.tty_descriptors[self.tty_id]
+            .color_code
+            .update_foreground(color);
+    }
+
+    pub fn update_background_color(&mut self, color: Color) {
+        self.tty_descriptors[self.tty_id]
+            .color_code
+            .update_background(color);
+    }
 }
 
 impl fmt::Write for Writer {
@@ -246,6 +375,7 @@ pub fn _print(args: fmt::Arguments) {
 
 static WRITER: Lazy<Mutex<Writer>> = Lazy::new(|| {
     Mutex::new(Writer {
+        escape_state: EscapeState::Normal,
         tty_id: 0,
         tty_descriptors: [TtyDescriptor::new(); NUMBER_OF_REGULAR_TTY],
         buffer: unsafe { &mut *(0xB8000 as *mut Buffer) },
@@ -267,26 +397,6 @@ fn set_cursor(x: usize, y: usize) {
 #[inline(always)]
 pub fn clear() {
     WRITER.lock().clear();
-}
-
-#[inline(always)]
-pub fn cursor_right() {
-    WRITER.lock().cursor_right();
-}
-
-#[inline(always)]
-pub fn cursor_left() {
-    WRITER.lock().cursor_left();
-}
-
-#[inline(always)]
-pub fn cursor_down() {
-    WRITER.lock().cursor_down();
-}
-
-#[inline(always)]
-pub fn cursor_up() {
-    WRITER.lock().cursor_up();
 }
 
 #[inline(always)]
