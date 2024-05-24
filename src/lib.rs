@@ -8,7 +8,6 @@ mod string;
 
 use core::panic::PanicInfo;
 use driver::keyboard;
-#[cfg(debug_assertions)]
 use driver::tty;
 use driver::vga;
 
@@ -25,7 +24,7 @@ pub extern "C" fn kmain() -> ! {
     #[cfg(debug_assertions)]
     tty::test_colors();
 
-    println!("42");
+    println!("{}42{}", tty::FG_GREEN, tty::FG_RESET);
 
     let mut keyboard = keyboard::ps2::Keyboard::new();
 
