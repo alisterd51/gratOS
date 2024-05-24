@@ -5,6 +5,10 @@ const BUFFER_HEIGHT: usize = 25;
 const BUFFER_WIDTH: usize = 80;
 const HISTORY_BUFFER_HEIGHT: usize = 1000;
 const NUMBER_OF_REGULAR_TTY: usize = 12;
+const DEFAULT_FOREFROUND_COLOR: Color = Color::LightGray;
+const DEFAULT_BACKFROUND_COLOR: Color = Color::Black;
+const DEFAULT_COLOR_CODE: ColorCode =
+    ColorCode::new(DEFAULT_FOREFROUND_COLOR, DEFAULT_BACKFROUND_COLOR);
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -35,6 +39,14 @@ struct ColorCode(u8);
 impl ColorCode {
     const fn new(foreground: Color, background: Color) -> ColorCode {
         ColorCode((background as u8) << 4 | (foreground as u8))
+    }
+
+    fn update_foreground(&mut self, color: Color) {
+        self.0 = (self.0 & 0xF0) | (color as u8);
+    }
+
+    fn update_background(&mut self, color: Color) {
+        self.0 = (color as u8) << 4 | (self.0 & 0x0F);
     }
 }
 
