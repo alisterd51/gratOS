@@ -25,7 +25,7 @@ qemu-system-x86_64 -cdrom gratos.x86.iso
 
 ## TODO
 
-- [ ] KFS-1 (gratOS:0.1.0):
+- [x] KFS-1 (gratOS:0.1.0):
   - [x] Mandatory:
     - [x] Install GRUB on an virtual image
     - [x] Write an ASM boot code that handles multiboot header, and use GRUB to init and call main function of the kernel itself
@@ -45,12 +45,18 @@ qemu-system-x86_64 -cdrom gratos.x86.iso
       - [x] print "42"
     - [x] Makefile:
       Your makefile must compile all your source files with the right flags and the right compiler. Keep in mind that your kernel will use at least two different languages (ASM and whatever-you-choose), so make (<- joke) your Makefile’s rules correctly
-  - [ ] Bonus:
+  - [x] Bonus:
     - [x] Add scroll and cursor support to your I/O interface.
       - [x] scroll
       - [x] cursor
       - [x] history
-    - [ ] Add colors support to your I/O interface.
+      - [x] interprete escape sequences such as `CSI n A`
+      - [x] add consts such as: `CURSOR_UP = "\x1B[A"`
+    - [x] Add colors support to your I/O interface.
+      - [x] interpret color escape sequences such as `CSI n m`
+      - [x] add consts such as: `FG_RED = "\x1b[31m"`
+      - [x] add default color
+      - [x] add tests in debug mode
     - [x] Add helpers like printf / printk in order to print information / debug easily
       - [x] print!
       - [x] println!
