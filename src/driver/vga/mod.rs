@@ -1,19 +1,9 @@
-mod history_buffer;
 pub mod text_mode;
 
-const BUFFER_HEIGHT: usize = 25;
-const BUFFER_WIDTH: usize = 80;
-const HISTORY_BUFFER_HEIGHT: usize = 1000;
-const NUMBER_OF_REGULAR_TTY: usize = 12;
-const DEFAULT_FOREFROUND_COLOR: Color = Color::LightGray;
-const DEFAULT_BACKFROUND_COLOR: Color = Color::Black;
-const DEFAULT_COLOR_CODE: ColorCode =
-    ColorCode::new(DEFAULT_FOREFROUND_COLOR, DEFAULT_BACKFROUND_COLOR);
+pub const BUFFER_WIDTH: usize = 80;
+pub const BUFFER_HEIGHT: usize = 25;
 
-#[allow(dead_code)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u8)]
-enum Color {
+pub enum Color {
     Black = 0,
     Blue = 1,
     Green = 2,
@@ -32,27 +22,26 @@ enum Color {
     White = 15,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(transparent)]
-struct ColorCode(u8);
+#[derive(Clone, Copy)]
+pub struct ColorCode(u8);
 
 impl ColorCode {
-    const fn new(foreground: Color, background: Color) -> ColorCode {
+    pub const fn new(foreground: Color, background: Color) -> ColorCode {
         ColorCode((background as u8) << 4 | (foreground as u8))
     }
 
-    fn update_foreground(&mut self, color: Color) {
+    pub fn set_foreground(&mut self, color: Color) {
         self.0 = (self.0 & 0xF0) | (color as u8);
     }
 
-    fn update_background(&mut self, color: Color) {
+    pub fn set_background(&mut self, color: Color) {
         self.0 = (color as u8) << 4 | (self.0 & 0x0F);
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy)]
 #[repr(C)]
-struct ScreenChar {
-    ascii_character: u8,
-    color_code: ColorCode,
+pub struct ScreenChar {
+    pub ascii_character: u8,
+    pub color_code: ColorCode,
 }

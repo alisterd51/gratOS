@@ -7,7 +7,7 @@ pub struct FifoBuffer {
 }
 
 impl FifoBuffer {
-    pub fn new() -> FifoBuffer {
+    pub const fn new() -> FifoBuffer {
         FifoBuffer {
             begin: 0,
             end: 0,

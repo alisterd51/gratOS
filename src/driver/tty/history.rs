@@ -1,7 +1,6 @@
-use super::{
-    ScreenChar, BUFFER_HEIGHT, BUFFER_WIDTH, DEFAULT_COLOR_CODE, HISTORY_BUFFER_HEIGHT,
-    NUMBER_OF_REGULAR_TTY,
-};
+use crate::driver::vga::{ScreenChar, BUFFER_HEIGHT, BUFFER_WIDTH};
+
+use super::{DEFAULT_COLOR_CODE, HISTORY_BUFFER_HEIGHT, NUMBER_OF_REGULAR_TTY};
 
 static mut BUFFER: &mut [[[ScreenChar; BUFFER_WIDTH]; HISTORY_BUFFER_HEIGHT];
          NUMBER_OF_REGULAR_TTY] = &mut [[[ScreenChar {
@@ -18,7 +17,7 @@ struct HistoryDescriptor {
 }
 
 impl HistoryDescriptor {
-    pub fn new() -> HistoryDescriptor {
+    pub const fn new() -> HistoryDescriptor {
         HistoryDescriptor {
             begin: 0,
             current: 0,
@@ -27,16 +26,16 @@ impl HistoryDescriptor {
     }
 }
 
-pub struct HistoryBuffer {
+pub struct History {
     tty_id: usize,
     history_descriptors: [HistoryDescriptor; NUMBER_OF_REGULAR_TTY],
     chars:
         &'static mut [[[ScreenChar; BUFFER_WIDTH]; HISTORY_BUFFER_HEIGHT]; NUMBER_OF_REGULAR_TTY],
 }
 
-impl HistoryBuffer {
-    pub fn new() -> HistoryBuffer {
-        HistoryBuffer {
+impl History {
+    pub fn new() -> History {
+        History {
             tty_id: 0,
             history_descriptors: [HistoryDescriptor::new(); NUMBER_OF_REGULAR_TTY],
             chars: unsafe { BUFFER },
@@ -51,12 +50,26 @@ impl HistoryBuffer {
         }
     }
 
+    pub fn set_line(&mut self, line: [ScreenChar; BUFFER_WIDTH], y: usize) {
+        self.chars[self.tty_id]
+            [(self.history_descriptors[self.tty_id].current + y) % HISTORY_BUFFER_HEIGHT] = line;
+    }
+
     // TODO: remove if useless
     #[allow(dead_code)]
     pub fn get_char(&self, x: usize, y: usize) -> Result<ScreenChar, ()> {
         if x < BUFFER_WIDTH && y < BUFFER_HEIGHT {
             Ok(self.chars[self.tty_id]
                 [(self.history_descriptors[self.tty_id].current + y) % HISTORY_BUFFER_HEIGHT][x])
+        } else {
+            Err(())
+        }
+    }
+
+    pub fn get_line(&self, y: usize) -> Result<[ScreenChar; BUFFER_WIDTH], ()> {
+        if y < BUFFER_HEIGHT {
+            Ok(self.chars[self.tty_id]
+                [(self.history_descriptors[self.tty_id].current + y) % HISTORY_BUFFER_HEIGHT])
         } else {
             Err(())
         }
@@ -100,15 +113,6 @@ impl HistoryBuffer {
         }; BUFFER_WIDTH];
         self.chars[self.tty_id][(self.history_descriptors[self.tty_id].end + BUFFER_HEIGHT - 1)
             % HISTORY_BUFFER_HEIGHT] = new_line;
-    }
-
-    pub fn get_line(&self, y: usize) -> Result<[ScreenChar; BUFFER_WIDTH], ()> {
-        if y < BUFFER_HEIGHT {
-            Ok(self.chars[self.tty_id]
-                [(self.history_descriptors[self.tty_id].current + y) % HISTORY_BUFFER_HEIGHT])
-        } else {
-            Err(())
-        }
     }
 
     pub fn change_tty(&mut self, id: usize) -> Result<(), ()> {
