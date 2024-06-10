@@ -1,8 +1,7 @@
 use crate::{
     driver::{
         keyboard::ScanCodeSet,
-        tty::{CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT, CURSOR_UP},
-        vga,
+        tty::{self, CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT, CURSOR_UP},
     },
     io::inb,
     print,
@@ -26,7 +25,7 @@ struct KeyModifier {
 }
 
 impl KeyModifier {
-    fn new() -> KeyModifier {
+    const fn new() -> KeyModifier {
         KeyModifier {
             left_shift: false,
             right_shift: false,
@@ -61,7 +60,7 @@ pub struct Keyboard {
 }
 
 impl Keyboard {
-    pub fn new() -> Keyboard {
+    pub const fn new() -> Keyboard {
         Keyboard {
             buffer: FifoBuffer::new(),
             key_modifier: KeyModifier::new(),
@@ -170,62 +169,62 @@ impl Keyboard {
             }
             KeymapValue::F1 => {
                 if pressed {
-                    vga::text_mode::change_tty(0);
+                    tty::change_tty(0);
                 }
             }
             KeymapValue::F2 => {
                 if pressed {
-                    vga::text_mode::change_tty(1);
+                    tty::change_tty(1);
                 }
             }
             KeymapValue::F3 => {
                 if pressed {
-                    vga::text_mode::change_tty(2);
+                    tty::change_tty(2);
                 }
             }
             KeymapValue::F4 => {
                 if pressed {
-                    vga::text_mode::change_tty(3);
+                    tty::change_tty(3);
                 }
             }
             KeymapValue::F5 => {
                 if pressed {
-                    vga::text_mode::change_tty(4);
+                    tty::change_tty(4);
                 }
             }
             KeymapValue::F6 => {
                 if pressed {
-                    vga::text_mode::change_tty(5);
+                    tty::change_tty(5);
                 }
             }
             KeymapValue::F7 => {
                 if pressed {
-                    vga::text_mode::change_tty(6);
+                    tty::change_tty(6);
                 }
             }
             KeymapValue::F8 => {
                 if pressed {
-                    vga::text_mode::change_tty(7);
+                    tty::change_tty(7);
                 }
             }
             KeymapValue::F9 => {
                 if pressed {
-                    vga::text_mode::change_tty(8);
+                    tty::change_tty(8);
                 }
             }
             KeymapValue::F10 => {
                 if pressed {
-                    vga::text_mode::change_tty(9);
+                    tty::change_tty(9);
                 }
             }
             KeymapValue::F11 => {
                 if pressed {
-                    vga::text_mode::change_tty(10);
+                    tty::change_tty(10);
                 }
             }
             KeymapValue::F12 => {
                 if pressed {
-                    vga::text_mode::change_tty(11);
+                    tty::change_tty(11);
                 }
             }
             _ => {}

@@ -9,7 +9,6 @@ mod string;
 use core::panic::PanicInfo;
 use driver::keyboard;
 use driver::tty;
-use driver::vga;
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
@@ -19,7 +18,7 @@ fn panic(info: &PanicInfo) -> ! {
 
 #[no_mangle]
 pub extern "C" fn kmain() -> ! {
-    vga::text_mode::clear();
+    tty::clear();
 
     #[cfg(debug_assertions)]
     tty::test_colors();
