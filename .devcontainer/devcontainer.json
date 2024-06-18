@@ -1,0 +1,13 @@
+{
+    "name": "dev",
+    "image": "ghcr.io/alisterd51/cross-toolchain:nightly",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "rust-lang.rust-analyzer",
+                "tamasfe.even-better-toml",
+                "maziac.asm-code-lens"
+            ]
+        }
+    }
+}
