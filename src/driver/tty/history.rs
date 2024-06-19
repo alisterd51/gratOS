@@ -75,6 +75,18 @@ impl History {
         }
     }
 
+    pub fn get_screen(&self) -> [[ScreenChar; BUFFER_WIDTH]; BUFFER_HEIGHT] {
+        let mut screen = [[ScreenChar {
+            ascii_character: b' ',
+            color_code: DEFAULT_COLOR_CODE,
+        }; BUFFER_WIDTH]; BUFFER_HEIGHT];
+        for (i, s) in screen.iter_mut().enumerate() {
+            *s = self.chars[self.tty_id]
+                [(self.history_descriptors[self.tty_id].current + i) % HISTORY_BUFFER_HEIGHT];
+        }
+        screen
+    }
+
     pub fn previous_line(&mut self) -> Result<(), ()> {
         if self.history_descriptors[self.tty_id].begin
             != self.history_descriptors[self.tty_id].current
