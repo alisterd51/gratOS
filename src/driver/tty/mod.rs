@@ -395,28 +395,19 @@ impl Tty {
 
     fn next_line(&mut self) {
         if self.history.next_line().is_ok() {
-            for row in 0..BUFFER_HEIGHT {
-                if let Ok(line) = self.history.get_line(row) {
-                    self.writer.set_line(line, row);
-                }
-            }
+            let screen = self.history.get_screen();
+            self.writer.set_screen(screen);
         } else {
             self.history.new_line();
-            for row in 0..BUFFER_HEIGHT {
-                if let Ok(line) = self.history.get_line(row) {
-                    self.writer.set_line(line, row);
-                }
-            }
+            let screen = self.history.get_screen();
+            self.writer.set_screen(screen);
         }
     }
 
     fn previous_line(&mut self) {
         if self.history.previous_line().is_ok() {
-            for row in 0..BUFFER_HEIGHT {
-                if let Ok(line) = self.history.get_line(row) {
-                    self.writer.set_line(line, row);
-                }
-            }
+            let screen = self.history.get_screen();
+            self.writer.set_screen(screen);
         }
     }
 
@@ -495,11 +486,8 @@ impl Tty {
 
     pub fn change_tty(&mut self, id: usize) {
         if self.history.change_tty(id).is_ok() {
-            for row in 0..BUFFER_HEIGHT {
-                if let Ok(line) = self.history.get_line(row) {
-                    self.writer.set_line(line, row);
-                }
-            }
+            let screen = self.history.get_screen();
+            self.writer.set_screen(screen);
             self.tty_id = id;
             self.update_cursor();
         }

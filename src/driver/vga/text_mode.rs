@@ -24,6 +24,10 @@ impl Writer {
     pub fn set_line(&mut self, line: [ScreenChar; BUFFER_WIDTH], row: usize) {
         self.buffer.chars[row] = line;
     }
+
+    pub fn set_screen(&mut self, screen: [[ScreenChar; BUFFER_WIDTH]; BUFFER_HEIGHT]) {
+        self.buffer.chars = screen;
+    }
 }
 
 pub fn set_cursor(col: usize, row: usize) {
