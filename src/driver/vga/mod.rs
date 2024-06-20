@@ -46,5 +46,6 @@ pub struct ScreenChar {
     pub color_code: ColorCode,
 }
 
-pub type Line = [ScreenChar; BUFFER_WIDTH];
-pub type Screen = [Line; BUFFER_HEIGHT];
+pub type ScreenCharLine = [ScreenChar; BUFFER_WIDTH];
+pub type Screen = [ScreenCharLine; BUFFER_HEIGHT];
+pub type Line = [u8; BUFFER_WIDTH];

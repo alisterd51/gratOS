@@ -77,9 +77,10 @@ qemu-system-x86_64 -cdrom gratos.x86.iso
     - [ ] The GDT must be set at address 0x00000800.
     - [ ] When this is done, you have to code a tool to print the kernel stack, in a human-friendly way. (Tip: If you haven’t made a printk yet, now is a good time !)
   - [ ] Bonus:
-    - [ ] Assuming your keyboard work correctly in your Kernel, and you able to catch an entry, let’s code a Shell !
+    - [x] Assuming your keyboard work correctly in your Kernel, and you able to catch an entry, let’s code a Shell !
         Not a POSIX Shell, just a minimalistic shell with a few commands, for debugging purposes.
-    - [ ] For example, you could implement the print-kernel-stack-thing in this shell, and some other things like reboot, halt and such.
+    - [x] For example, you could implement the print-kernel-stack-thing in this shell, and some other things like reboot, halt and such.
+      - [x] hello
       - [ ] print-kernel-stack-thing
       - [ ] reboot
       - [ ] halt

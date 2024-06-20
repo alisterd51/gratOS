@@ -1,4 +1,4 @@
-use super::{Line, Screen, ScreenChar, BUFFER_WIDTH};
+use super::{Screen, ScreenChar, ScreenCharLine, BUFFER_WIDTH};
 use crate::io::outb;
 
 #[repr(transparent)]
@@ -23,7 +23,7 @@ impl Writer {
         unsafe { (*self.buffer).chars[row][col] = *c };
     }
 
-    pub fn set_line(&mut self, line: &Line, row: usize) {
+    pub fn set_line(&mut self, line: &ScreenCharLine, row: usize) {
         unsafe { (*self.buffer).chars[row] = *line };
     }
 

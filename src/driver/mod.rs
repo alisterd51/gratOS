@@ -1,3 +1,4 @@
+pub mod console;
 pub mod keyboard;
-pub mod tty;
+pub mod shell;
 mod vga;
