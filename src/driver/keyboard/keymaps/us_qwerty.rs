@@ -536,7 +536,14 @@ pub const US_QUERTY_KEYMAP: Keymap = {
     keymap[ScanCodeValue::Insert as usize] = None;
     keymap[ScanCodeValue::Home as usize] = None;
     keymap[ScanCodeValue::PageUp as usize] = None;
-    keymap[ScanCodeValue::Delete as usize] = None;
+    keymap[ScanCodeValue::Delete as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::Delete,
+        shift: KeymapValue::Delete,
+        alt1: KeymapValue::AltDelete,
+        alt2: KeymapValue::AltDelete,
+        alt_shift: KeymapValue::AltDelete,
+        ctrl: KeymapValue::Delete,
+    });
     keymap[ScanCodeValue::End as usize] = None;
     keymap[ScanCodeValue::PageDown as usize] = None;
     keymap[ScanCodeValue::CursorRight as usize] = Some(KeymapSet {
@@ -579,11 +586,32 @@ pub const US_QUERTY_KEYMAP: Keymap = {
         alt_shift: KeymapValue::NumberLock,
         ctrl: KeymapValue::NumberLock,
     });
-    keymap[ScanCodeValue::KeypadSlash as usize] = None;
-    keymap[ScanCodeValue::KeypadStar as usize] = None;
+    keymap[ScanCodeValue::KeypadSlash as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::Ascii('/'),
+        shift: KeymapValue::Ascii('/'),
+        alt1: KeymapValue::Alt('/'),
+        alt2: KeymapValue::Alt('/'),
+        alt_shift: KeymapValue::Alt('/'),
+        ctrl: KeymapValue::Control('@'),
+    });
+    keymap[ScanCodeValue::KeypadStar as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::Ascii('*'),
+        shift: KeymapValue::Ascii('*'),
+        alt1: KeymapValue::Alt('*'),
+        alt2: KeymapValue::Alt('*'),
+        alt_shift: KeymapValue::Alt('*'),
+        ctrl: KeymapValue::Control('@'),
+    });
     keymap[ScanCodeValue::KeypadMin as usize] = None;
     keymap[ScanCodeValue::KeypadPlus as usize] = None;
-    keymap[ScanCodeValue::KeypadEnter as usize] = None;
+    keymap[ScanCodeValue::KeypadEnter as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::Control('M'),
+        shift: KeymapValue::Control('M'),
+        alt1: KeymapValue::ControlAlt('M'),
+        alt2: KeymapValue::ControlAlt('M'),
+        alt_shift: KeymapValue::ControlAlt('M'),
+        ctrl: KeymapValue::Control('J'),
+    });
     keymap[ScanCodeValue::Keypad1 as usize] = None;
     keymap[ScanCodeValue::Keypad2 as usize] = None;
     keymap[ScanCodeValue::Keypad3 as usize] = None;
