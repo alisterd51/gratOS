@@ -2,12 +2,11 @@ use crate::driver::vga::{ScreenChar, BUFFER_HEIGHT, BUFFER_WIDTH};
 
 use super::{DEFAULT_COLOR_CODE, HISTORY_BUFFER_HEIGHT, NUMBER_OF_REGULAR_TTY};
 
-static mut BUFFER: &mut [[[ScreenChar; BUFFER_WIDTH]; HISTORY_BUFFER_HEIGHT];
-         NUMBER_OF_REGULAR_TTY] = &mut [[[ScreenChar {
+static mut BUFFER: *mut [[[ScreenChar; BUFFER_WIDTH]; HISTORY_BUFFER_HEIGHT];
+    NUMBER_OF_REGULAR_TTY] = &mut [[[ScreenChar {
     ascii_character: b' ',
     color_code: DEFAULT_COLOR_CODE,
-}; BUFFER_WIDTH]; HISTORY_BUFFER_HEIGHT];
-    NUMBER_OF_REGULAR_TTY];
+}; BUFFER_WIDTH]; HISTORY_BUFFER_HEIGHT]; NUMBER_OF_REGULAR_TTY];
 
 #[derive(Clone, Copy)]
 struct HistoryDescriptor {
@@ -29,9 +28,10 @@ impl HistoryDescriptor {
 pub struct History {
     tty_id: usize,
     history_descriptors: [HistoryDescriptor; NUMBER_OF_REGULAR_TTY],
-    chars:
-        &'static mut [[[ScreenChar; BUFFER_WIDTH]; HISTORY_BUFFER_HEIGHT]; NUMBER_OF_REGULAR_TTY],
+    chars: *mut [[[ScreenChar; BUFFER_WIDTH]; HISTORY_BUFFER_HEIGHT]; NUMBER_OF_REGULAR_TTY],
 }
+
+unsafe impl Send for History {}
 
 impl History {
     pub fn new() -> History {
@@ -44,23 +44,30 @@ impl History {
 
     pub fn set_char(&mut self, x: usize, y: usize, c: ScreenChar) {
         if x < BUFFER_WIDTH && y < BUFFER_HEIGHT {
-            self.chars[self.tty_id]
-                [(self.history_descriptors[self.tty_id].current + y) % HISTORY_BUFFER_HEIGHT][x] =
-                c;
+            unsafe {
+                (*self.chars)[self.tty_id]
+                    [(self.history_descriptors[self.tty_id].current + y) % HISTORY_BUFFER_HEIGHT]
+                    [x] = c;
+            }
         }
     }
 
     pub fn set_line(&mut self, line: [ScreenChar; BUFFER_WIDTH], y: usize) {
-        self.chars[self.tty_id]
-            [(self.history_descriptors[self.tty_id].current + y) % HISTORY_BUFFER_HEIGHT] = line;
+        unsafe {
+            (*self.chars)[self.tty_id]
+                [(self.history_descriptors[self.tty_id].current + y) % HISTORY_BUFFER_HEIGHT] =
+                line;
+        }
     }
 
     // TODO: remove if useless
     #[allow(dead_code)]
     pub fn get_char(&self, x: usize, y: usize) -> Result<ScreenChar, ()> {
         if x < BUFFER_WIDTH && y < BUFFER_HEIGHT {
-            Ok(self.chars[self.tty_id]
-                [(self.history_descriptors[self.tty_id].current + y) % HISTORY_BUFFER_HEIGHT][x])
+            Ok(unsafe {
+                (*self.chars)[self.tty_id]
+                    [(self.history_descriptors[self.tty_id].current + y) % HISTORY_BUFFER_HEIGHT][x]
+            })
         } else {
             Err(())
         }
@@ -68,8 +75,10 @@ impl History {
 
     pub fn get_line(&self, y: usize) -> Result<[ScreenChar; BUFFER_WIDTH], ()> {
         if y < BUFFER_HEIGHT {
-            Ok(self.chars[self.tty_id]
-                [(self.history_descriptors[self.tty_id].current + y) % HISTORY_BUFFER_HEIGHT])
+            Ok(unsafe {
+                (*self.chars)[self.tty_id]
+                    [(self.history_descriptors[self.tty_id].current + y) % HISTORY_BUFFER_HEIGHT]
+            })
         } else {
             Err(())
         }
@@ -81,8 +90,10 @@ impl History {
             color_code: DEFAULT_COLOR_CODE,
         }; BUFFER_WIDTH]; BUFFER_HEIGHT];
         for (i, s) in screen.iter_mut().enumerate() {
-            *s = self.chars[self.tty_id]
-                [(self.history_descriptors[self.tty_id].current + i) % HISTORY_BUFFER_HEIGHT];
+            unsafe {
+                *s = (*self.chars)[self.tty_id]
+                    [(self.history_descriptors[self.tty_id].current + i) % HISTORY_BUFFER_HEIGHT];
+            }
         }
         screen
     }
@@ -123,8 +134,12 @@ impl History {
             ascii_character: b' ',
             color_code: DEFAULT_COLOR_CODE,
         }; BUFFER_WIDTH];
-        self.chars[self.tty_id][(self.history_descriptors[self.tty_id].end + BUFFER_HEIGHT - 1)
-            % HISTORY_BUFFER_HEIGHT] = new_line;
+        unsafe {
+            (*self.chars)[self.tty_id][(self.history_descriptors[self.tty_id].end
+                + BUFFER_HEIGHT
+                - 1)
+                % HISTORY_BUFFER_HEIGHT] = new_line;
+        }
     }
 
     pub fn change_tty(&mut self, id: usize) -> Result<(), ()> {
