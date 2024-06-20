@@ -9,12 +9,13 @@ mod print_kernel_stack;
 mod string;
 
 use core::panic::PanicInfo;
+use driver::console;
 use driver::keyboard;
-use driver::tty;
+use driver::shell;
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    println!("{}", info);
+    println!("{info}");
     loop {}
 }
 
@@ -22,22 +23,24 @@ fn panic(info: &PanicInfo) -> ! {
 pub extern "C" fn kmain() -> ! {
     gdt::init();
 
-    tty::clear();
+    console::clear();
 
     #[cfg(debug_assertions)]
-    tty::test_colors();
+    console::test_colors();
 
     #[cfg(debug_assertions)]
     print_kernel_stack::test();
 
-    println!("{}42{}", tty::FG_GREEN, tty::FG_RESET);
+    println!("{}42{}", console::FG_GREEN, console::FG_RESET);
 
     print_kernel_stack::print_kernel_stack(0);
 
     let mut keyboard = keyboard::ps2::Keyboard::new();
 
     loop {
+        shell::initialize(console::get_tty_id());
         keyboard.get_input();
         keyboard.interpret_to_vga_text_mode();
+        shell::interpret(console::get_tty_id());
     }
 }

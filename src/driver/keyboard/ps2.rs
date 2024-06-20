@@ -1,7 +1,9 @@
 use crate::{
     driver::{
+        console::{
+            self, CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT, CURSOR_UP, SCROLL_DOWN, SCROLL_UP,
+        },
         keyboard::ScanCodeSet,
-        tty::{self, CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT, CURSOR_UP},
     },
     io::inb,
     print,
@@ -99,13 +101,13 @@ impl Keyboard {
         match keymap_value {
             KeymapValue::Ascii(c) | KeymapValue::Lowercase(c) | KeymapValue::Alt(c) => {
                 if pressed {
-                    print!("{}", c);
+                    print!("{c}");
                 }
             }
             KeymapValue::Control(c) | KeymapValue::ControlAlt(c) => {
                 if pressed {
                     let c = ((c as u8) & 0x3F) as char;
-                    print!("{}", c);
+                    print!("{c}");
                 }
             }
             KeymapValue::CapsLock => {
@@ -131,87 +133,97 @@ impl Keyboard {
             KeymapValue::RightAlt => self.key_modifier.alt_gr = pressed,
             KeymapValue::Delete => {
                 if pressed {
-                    print!("{}", 0x7F as char);
+                    print!("{}", 0x7Fu8 as char);
                 }
             }
             KeymapValue::Right | KeymapValue::AltRight | KeymapValue::ControlRight => {
                 if pressed {
-                    print!("{}", CURSOR_RIGHT);
+                    print!("{CURSOR_RIGHT}");
                 }
             }
             KeymapValue::Left | KeymapValue::AltLeft | KeymapValue::ControlLeft => {
                 if pressed {
-                    print!("{}", CURSOR_LEFT);
+                    print!("{CURSOR_LEFT}");
                 }
             }
             KeymapValue::Down | KeymapValue::AltDown | KeymapValue::ControlDown => {
                 if pressed {
-                    print!("{}", CURSOR_DOWN);
+                    print!("{CURSOR_DOWN}");
                 }
             }
             KeymapValue::Up | KeymapValue::AltUp | KeymapValue::ControlUp => {
                 if pressed {
-                    print!("{}", CURSOR_UP);
+                    print!("{CURSOR_UP}");
+                }
+            }
+            KeymapValue::PageUp | KeymapValue::AltPageUp | KeymapValue::ControlPageUp => {
+                if pressed {
+                    print!("{SCROLL_UP}");
+                }
+            }
+            KeymapValue::PageDown | KeymapValue::AltPageDown | KeymapValue::ControlPageDown => {
+                if pressed {
+                    print!("{SCROLL_DOWN}");
                 }
             }
             KeymapValue::F1 => {
                 if pressed {
-                    tty::change_tty_id(0);
+                    console::change_tty_id(0);
                 }
             }
             KeymapValue::F2 => {
                 if pressed {
-                    tty::change_tty_id(1);
+                    console::change_tty_id(1);
                 }
             }
             KeymapValue::F3 => {
                 if pressed {
-                    tty::change_tty_id(2);
+                    console::change_tty_id(2);
                 }
             }
             KeymapValue::F4 => {
                 if pressed {
-                    tty::change_tty_id(3);
+                    console::change_tty_id(3);
                 }
             }
             KeymapValue::F5 => {
                 if pressed {
-                    tty::change_tty_id(4);
+                    console::change_tty_id(4);
                 }
             }
             KeymapValue::F6 => {
                 if pressed {
-                    tty::change_tty_id(5);
+                    console::change_tty_id(5);
                 }
             }
             KeymapValue::F7 => {
                 if pressed {
-                    tty::change_tty_id(6);
+                    console::change_tty_id(6);
                 }
             }
             KeymapValue::F8 => {
                 if pressed {
-                    tty::change_tty_id(7);
+                    console::change_tty_id(7);
                 }
             }
             KeymapValue::F9 => {
                 if pressed {
-                    tty::change_tty_id(8);
+                    console::change_tty_id(8);
                 }
             }
             KeymapValue::F10 => {
                 if pressed {
-                    tty::change_tty_id(9);
+                    console::change_tty_id(9);
                 }
             }
             KeymapValue::F11 => {
                 if pressed {
-                    tty::change_tty_id(10);
+                    console::change_tty_id(10);
                 }
             }
             KeymapValue::F12 => {
                 if pressed {
-                    tty::change_tty_id(11);
+                    console::change_tty_id(11);
                 }
             }
             _ => {}

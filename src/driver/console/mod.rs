@@ -1,12 +1,19 @@
 mod history;
 
-#[cfg(debug_assertions)]
-use crate::{print, println};
+use core::fmt;
+use history::History;
+use spin::{Lazy, Mutex};
 
-use super::vga::{Color, ColorCode};
+use super::{
+    shell,
+    vga::{
+        text_mode::{set_cursor, Writer},
+        Color, ColorCode, Line, ScreenChar, BUFFER_HEIGHT, BUFFER_WIDTH,
+    },
+};
 
+pub const NUMBER_OF_REGULAR_TTY: usize = 12;
 const HISTORY_BUFFER_HEIGHT: usize = 1000;
-const NUMBER_OF_REGULAR_TTY: usize = 12;
 const DEFAULT_FOREFROUND_COLOR: Color = Color::LightGray;
 const DEFAULT_BACKFROUND_COLOR: Color = Color::Black;
 const DEFAULT_COLOR_CODE: ColorCode =
@@ -23,6 +30,11 @@ pub const CURSOR_DOWN: &str = "\x1B[B";
 pub const CURSOR_RIGHT: &str = "\x1B[C";
 #[allow(dead_code)]
 pub const CURSOR_LEFT: &str = "\x1B[D";
+
+#[allow(dead_code)]
+pub const SCROLL_UP: &str = "\x1B[S";
+#[allow(dead_code)]
+pub const SCROLL_DOWN: &str = "\x1B[T";
 
 #[allow(dead_code)]
 pub const RESET: &str = "\x1B[0m";
@@ -97,100 +109,14 @@ pub const BG_BRIGHT_WHITE: &str = "\x1B[107m";
 #[allow(dead_code)]
 pub const BG_RESET: &str = "\x1B[49m";
 
-#[cfg(debug_assertions)]
-pub fn test_colors() {
-    const FGS: [&str; 16] = [
-        FG_BLACK,
-        FG_RED,
-        FG_GREEN,
-        FG_YELLOW,
-        FG_BLUE,
-        FG_MAGENTA,
-        FG_CYAN,
-        FG_WHITE,
-        FG_BRIGHT_BLACK,
-        FG_BRIGHT_RED,
-        FG_BRIGHT_GREEN,
-        FG_BRIGHT_YELLOW,
-        FG_BRIGHT_BLUE,
-        FG_BRIGHT_MAGENTA,
-        FG_BRIGHT_CYAN,
-        FG_BRIGHT_WHITE,
-    ];
-    const BGS: [&str; 16] = [
-        BG_BLACK,
-        BG_RED,
-        BG_GREEN,
-        BG_YELLOW,
-        BG_BLUE,
-        BG_MAGENTA,
-        BG_CYAN,
-        BG_WHITE,
-        BG_BRIGHT_BLACK,
-        BG_BRIGHT_RED,
-        BG_BRIGHT_GREEN,
-        BG_BRIGHT_YELLOW,
-        BG_BRIGHT_BLUE,
-        BG_BRIGHT_MAGENTA,
-        BG_BRIGHT_CYAN,
-        BG_BRIGHT_WHITE,
-    ];
-
-    println!("test: colors escape sequences");
-    println!("all:");
-    for background in BGS {
-        for foreground in FGS {
-            print!("{}{}a{}", background, foreground, RESET);
-        }
-        println!();
-    }
-    println!("foreground reset:");
-    for background in BGS {
-        for foreground in FGS {
-            print!("{}{}a{}b{}", background, foreground, FG_RESET, RESET);
-        }
-        println!();
-    }
-    println!("background reset:");
-    for background in BGS {
-        for foreground in FGS {
-            print!("{}{}a{}b{}", background, foreground, BG_RESET, RESET);
-        }
-        println!();
-    }
-    println!("blue hello:");
-    {
-        println!("\x1B");
-        println!("[");
-        println!("3");
-        println!("4");
-        println!("m");
-        println!("hello");
-        println!("\x1B");
-        println!("[");
-        println!("0");
-        println!("m");
-        println!("hello");
-    }
-    println!("end test: colors escape sequences");
-}
-
-use crate::driver::vga::{
-    text_mode::{set_cursor, Writer},
-    ScreenChar, BUFFER_HEIGHT, BUFFER_WIDTH,
-};
-use core::fmt;
-use history::History;
-use spin::{Lazy, Mutex};
-
 #[derive(Clone, Copy)]
-struct TtyDescriptor {
+struct ConsoleDescriptor {
     row_position: usize,
     column_position: usize,
     color_code: ColorCode,
 }
 
-impl TtyDescriptor {
+impl ConsoleDescriptor {
     pub const fn new() -> Self {
         Self {
             row_position: 0,
@@ -213,20 +139,20 @@ enum EscapeState {
     Csi(CsiParam),
 }
 
-struct Tty {
+struct Console {
     escape_state: EscapeState,
     id: usize,
-    descriptors: [TtyDescriptor; NUMBER_OF_REGULAR_TTY],
+    descriptors: [ConsoleDescriptor; NUMBER_OF_REGULAR_TTY],
     writer: Writer,
     history: History,
 }
 
-impl Tty {
-    pub const fn new() -> Self {
+impl Console {
+    const fn new() -> Self {
         Self {
             escape_state: EscapeState::Normal,
             id: 0,
-            descriptors: [TtyDescriptor::new(); NUMBER_OF_REGULAR_TTY],
+            descriptors: [ConsoleDescriptor::new(); NUMBER_OF_REGULAR_TTY],
             writer: Writer::new(),
             history: History::new(),
         }
@@ -234,7 +160,14 @@ impl Tty {
 
     fn apply_byte(&mut self, byte: u8) {
         match byte {
-            b'\n' | b'\r' => self.new_line(),
+            b'\n' | b'\r' => {
+                if self.history.end_line().is_ok() {
+                    self.update_screen();
+                }
+                let line = self.get_current_line();
+                shell::add_line_to_buf(self.id, &line);
+                self.new_line();
+            }
             b'\t' => self.write_string("    "),
             0x08 => self.backspace(),
             0x7F => self.delete(),
@@ -257,7 +190,7 @@ impl Tty {
                 self.escape_state = match byte {
                     byte @ b'@'..=b'~' => {
                         match byte {
-                            byte @ b'A'..=b'D' => {
+                            byte @ b'A'..=b'Z' => {
                                 let mut n = match n {
                                     CsiParam::Defined(n) => n,
                                     CsiParam::Undefined => 1,
@@ -269,6 +202,8 @@ impl Tty {
                                         b'B' => self.cursor_down(),
                                         b'C' => self.cursor_right(),
                                         b'D' => self.cursor_left(),
+                                        b'S' => self.scroll_up(),
+                                        b'T' => self.scroll_down(),
                                         _ => {}
                                     }
                                     n -= 1;
@@ -346,14 +281,11 @@ impl Tty {
     }
 
     fn backspace(&mut self) {
-        if self.descriptors[self.id].column_position > 0 {
+        if self.descriptors[self.id].column_position > shell::ps1().len() {
             self.descriptors[self.id].column_position -= 1;
-        } else if self.descriptors[self.id].row_position > 0 {
-            self.descriptors[self.id].row_position -= 1;
-            self.descriptors[self.id].column_position = BUFFER_WIDTH - 1;
+            self.write_ascii(b' ');
+            self.update_cursor();
         }
-        self.write_ascii(b' ');
-        self.update_cursor();
     }
 
     fn delete(&mut self) {
@@ -361,10 +293,11 @@ impl Tty {
     }
 
     fn write_byte(&mut self, byte: u8) {
-        self.write_ascii(byte);
-        if self.descriptors[self.id].column_position + 1 >= BUFFER_WIDTH {
-            self.new_line();
-        } else {
+        if self.history.end_line().is_ok() {
+            self.update_screen();
+        }
+        if self.descriptors[self.id].column_position + 1 < BUFFER_WIDTH {
+            self.write_ascii(byte);
             self.descriptors[self.id].column_position += 1;
         }
         self.update_cursor();
@@ -383,6 +316,25 @@ impl Tty {
         self.history.set_char(&c, col, row);
     }
 
+    fn get_current_line(&self) -> Line {
+        let line = self
+            .history
+            .get_line(self.descriptors[self.id].row_position);
+        let mut new_line = [0u8; BUFFER_WIDTH];
+
+        if let Ok(line) = line {
+            for i in 0..BUFFER_WIDTH {
+                let c = line[i].ascii_character;
+                if c.is_ascii_whitespace() {
+                    new_line[i] = b'\0';
+                } else {
+                    new_line[i] = line[i].ascii_character;
+                }
+            }
+        }
+        new_line
+    }
+
     fn new_line(&mut self) {
         if self.descriptors[self.id].row_position < BUFFER_HEIGHT - 1 {
             self.descriptors[self.id].row_position += 1;
@@ -393,31 +345,17 @@ impl Tty {
         self.update_cursor();
     }
 
-    fn old_line(&mut self) {
-        if self.descriptors[self.id].row_position > 0 {
-            self.descriptors[self.id].row_position -= 1;
-        } else {
-            self.previous_line();
-        }
-        self.descriptors[self.id].column_position = BUFFER_WIDTH - 1;
-        self.update_cursor();
+    fn update_screen(&mut self) {
+        let screen = self.history.get_screen();
+        self.writer.set_screen(&screen);
     }
 
     fn next_line(&mut self) {
         if self.history.next_line().is_ok() {
-            let screen = self.history.get_screen();
-            self.writer.set_screen(&screen);
+            self.update_screen();
         } else {
             self.history.new_line();
-            let screen = self.history.get_screen();
-            self.writer.set_screen(&screen);
-        }
-    }
-
-    fn previous_line(&mut self) {
-        if self.history.previous_line().is_ok() {
-            let screen = self.history.get_screen();
-            self.writer.set_screen(&screen);
+            self.update_screen();
         }
     }
 
@@ -438,7 +376,7 @@ impl Tty {
         }
     }
 
-    pub fn clear(&mut self) {
+    fn clear(&mut self) {
         for row in 0..BUFFER_HEIGHT {
             self.clear_row(row);
         }
@@ -447,44 +385,20 @@ impl Tty {
         self.update_cursor();
     }
 
-    pub fn cursor_right(&mut self) {
-        if self.descriptors[self.id].column_position + 1 >= BUFFER_WIDTH {
-            self.new_line();
-        } else {
-            self.descriptors[self.id].column_position += 1;
-        }
-        self.update_cursor();
+    fn cursor_right(&mut self) {
+        shell::right(self.id);
     }
 
-    pub fn cursor_left(&mut self) {
-        if self.descriptors[self.id].column_position == 0 {
-            self.old_line();
-        } else {
-            self.descriptors[self.id].column_position -= 1;
-        }
-        self.update_cursor();
+    fn cursor_left(&mut self) {
+        shell::left(self.id);
     }
 
-    pub fn cursor_down(&mut self) {
-        if self.descriptors[self.id].row_position + 1 >= BUFFER_HEIGHT {
-            let col = self.descriptors[self.id].column_position;
-            self.new_line();
-            self.descriptors[self.id].column_position = col;
-        } else {
-            self.descriptors[self.id].row_position += 1;
-        }
-        self.update_cursor();
+    fn cursor_down(&mut self) {
+        shell::down(self.id);
     }
 
-    pub fn cursor_up(&mut self) {
-        if self.descriptors[self.id].row_position == 0 {
-            let col = self.descriptors[self.id].column_position;
-            self.old_line();
-            self.descriptors[self.id].column_position = col;
-        } else {
-            self.descriptors[self.id].row_position -= 1;
-        }
-        self.update_cursor();
+    fn cursor_up(&mut self) {
+        shell::up(self.id);
     }
 
     fn update_cursor(&self) {
@@ -494,10 +408,21 @@ impl Tty {
         );
     }
 
-    pub fn change_tty_id(&mut self, id: usize) {
+    fn scroll_up(&mut self) {
+        if self.history.previous_line().is_ok() {
+            self.update_screen();
+        }
+    }
+
+    fn scroll_down(&mut self) {
+        if self.history.next_line().is_ok() {
+            self.update_screen();
+        }
+    }
+
+    fn change_tty_id(&mut self, id: usize) {
         if self.history.change_tty_id(id).is_ok() {
-            let screen = self.history.get_screen();
-            self.writer.set_screen(&screen);
+            self.update_screen();
             self.id = id;
             self.update_cursor();
         }
@@ -507,16 +432,20 @@ impl Tty {
         self.descriptors[self.id].color_code = color_code;
     }
 
-    pub fn update_foreground_color(&mut self, color: Color) {
+    fn update_foreground_color(&mut self, color: Color) {
         self.descriptors[self.id].color_code.set_foreground(color);
     }
 
-    pub fn update_background_color(&mut self, color: Color) {
+    fn update_background_color(&mut self, color: Color) {
         self.descriptors[self.id].color_code.set_background(color);
+    }
+
+    fn get_tty_id(&self) -> usize {
+        self.id
     }
 }
 
-impl fmt::Write for Tty {
+impl fmt::Write for Console {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.write_string(s);
         Ok(())
@@ -527,7 +456,7 @@ impl fmt::Write for Tty {
 macro_rules! print {
     ($($arg:tt)*) => {{
         #[allow(clippy::used_underscore_items)]
-        $crate::driver::tty::_print(format_args!($($arg)*));
+        $crate::driver::console::_print(format_args!($($arg)*));
     }};
 }
 
@@ -547,7 +476,7 @@ pub fn _print(args: fmt::Arguments) {
     WRITER.lock().write_fmt(args).unwrap();
 }
 
-static WRITER: Lazy<Mutex<Tty>> = Lazy::new(|| Mutex::new(Tty::new()));
+static WRITER: Lazy<Mutex<Console>> = Lazy::new(|| Mutex::new(Console::new()));
 
 #[allow(clippy::inline_always)]
 #[inline(always)]
@@ -559,4 +488,88 @@ pub fn clear() {
 #[inline(always)]
 pub fn change_tty_id(id: usize) {
     WRITER.lock().change_tty_id(id);
+}
+
+#[allow(clippy::inline_always)]
+#[inline(always)]
+pub fn get_tty_id() -> usize {
+    WRITER.lock().get_tty_id()
+}
+
+#[cfg(debug_assertions)]
+pub fn test_colors() {
+    const FGS: [&str; 16] = [
+        FG_BLACK,
+        FG_RED,
+        FG_GREEN,
+        FG_YELLOW,
+        FG_BLUE,
+        FG_MAGENTA,
+        FG_CYAN,
+        FG_WHITE,
+        FG_BRIGHT_BLACK,
+        FG_BRIGHT_RED,
+        FG_BRIGHT_GREEN,
+        FG_BRIGHT_YELLOW,
+        FG_BRIGHT_BLUE,
+        FG_BRIGHT_MAGENTA,
+        FG_BRIGHT_CYAN,
+        FG_BRIGHT_WHITE,
+    ];
+    const BGS: [&str; 16] = [
+        BG_BLACK,
+        BG_RED,
+        BG_GREEN,
+        BG_YELLOW,
+        BG_BLUE,
+        BG_MAGENTA,
+        BG_CYAN,
+        BG_WHITE,
+        BG_BRIGHT_BLACK,
+        BG_BRIGHT_RED,
+        BG_BRIGHT_GREEN,
+        BG_BRIGHT_YELLOW,
+        BG_BRIGHT_BLUE,
+        BG_BRIGHT_MAGENTA,
+        BG_BRIGHT_CYAN,
+        BG_BRIGHT_WHITE,
+    ];
+
+    println!("test: colors escape sequences");
+    println!("all:");
+    for background in BGS {
+        for foreground in FGS {
+            print!("{background}{foreground}a{RESET}");
+        }
+        println!();
+    }
+    println!("foreground reset:");
+    for background in BGS {
+        for foreground in FGS {
+            print!("{background}{foreground}a{FG_RESET}b{RESET}");
+        }
+        println!();
+    }
+    println!("background reset:");
+    for background in BGS {
+        for foreground in FGS {
+            print!("{background}{foreground}a{FG_RESET}b{RESET}");
+        }
+        println!();
+    }
+    println!("blue hello:");
+    {
+        println!("\x1B");
+        println!("[");
+        println!("3");
+        println!("4");
+        println!("m");
+        println!("hello");
+        println!("\x1B");
+        println!("[");
+        println!("0");
+        println!("m");
+        println!("hello");
+    }
+    println!("end test: colors escape sequences");
 }

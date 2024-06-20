@@ -1,8 +1,8 @@
-use crate::driver::vga::{Line, Screen, ScreenChar, BUFFER_HEIGHT, BUFFER_WIDTH};
+use crate::driver::vga::{Screen, ScreenChar, ScreenCharLine, BUFFER_HEIGHT, BUFFER_WIDTH};
 
 use super::{DEFAULT_COLOR_CODE, HISTORY_BUFFER_HEIGHT, NUMBER_OF_REGULAR_TTY};
 
-static mut BUFFER: *mut [[Line; HISTORY_BUFFER_HEIGHT]; NUMBER_OF_REGULAR_TTY] =
+static mut BUFFER: *mut [[ScreenCharLine; HISTORY_BUFFER_HEIGHT]; NUMBER_OF_REGULAR_TTY] =
     &mut [[[ScreenChar {
         ascii_character: b' ',
         color_code: DEFAULT_COLOR_CODE,
@@ -28,7 +28,7 @@ impl HistoryDescriptor {
 pub struct History {
     tty_id: usize,
     descriptors: [HistoryDescriptor; NUMBER_OF_REGULAR_TTY],
-    chars: *mut [[Line; HISTORY_BUFFER_HEIGHT]; NUMBER_OF_REGULAR_TTY],
+    chars: *mut [[ScreenCharLine; HISTORY_BUFFER_HEIGHT]; NUMBER_OF_REGULAR_TTY],
 }
 
 unsafe impl Send for History {}
@@ -52,7 +52,7 @@ impl History {
         }
     }
 
-    pub fn set_line(&mut self, line: &Line, row: usize) {
+    pub fn set_line(&mut self, line: &ScreenCharLine, row: usize) {
         unsafe {
             (*self.chars)[self.tty_id]
                 [(self.descriptors[self.tty_id].current + row) % HISTORY_BUFFER_HEIGHT] = *line;
@@ -74,7 +74,7 @@ impl History {
 
     // TODO: remove if useless
     #[allow(dead_code)]
-    pub fn get_line(&self, y: usize) -> Result<Line, ()> {
+    pub fn get_line(&self, y: usize) -> Result<ScreenCharLine, ()> {
         if y < BUFFER_HEIGHT {
             Ok(unsafe {
                 (*self.chars)[self.tty_id]
@@ -114,6 +114,34 @@ impl History {
         } else {
             self.descriptors[self.tty_id].current += 1;
             Ok(())
+        }
+    }
+
+    // TODO: remove if useless
+    #[allow(dead_code)]
+    pub fn begin_line(&mut self) -> Result<(), ()> {
+        let mut ok = false;
+
+        while self.previous_line().is_ok() {
+            ok = true;
+        }
+        if ok {
+            Ok(())
+        } else {
+            Err(())
+        }
+    }
+
+    pub fn end_line(&mut self) -> Result<(), ()> {
+        let mut ok = false;
+
+        while self.next_line().is_ok() {
+            ok = true;
+        }
+        if ok {
+            Ok(())
+        } else {
+            Err(())
         }
     }
 

@@ -535,7 +535,14 @@ pub const US_QUERTY_KEYMAP: Keymap = {
     });
     keymap[ScanCodeValue::Insert as usize] = None;
     keymap[ScanCodeValue::Home as usize] = None;
-    keymap[ScanCodeValue::PageUp as usize] = None;
+    keymap[ScanCodeValue::PageUp as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::PageUp,
+        shift: KeymapValue::PageUp,
+        alt1: KeymapValue::AltPageUp,
+        alt2: KeymapValue::AltPageUp,
+        alt_shift: KeymapValue::AltPageUp,
+        ctrl: KeymapValue::ControlPageUp,
+    });
     keymap[ScanCodeValue::Delete as usize] = Some(KeymapSet {
         not_shift: KeymapValue::Delete,
         shift: KeymapValue::Delete,
@@ -545,7 +552,14 @@ pub const US_QUERTY_KEYMAP: Keymap = {
         ctrl: KeymapValue::Delete,
     });
     keymap[ScanCodeValue::End as usize] = None;
-    keymap[ScanCodeValue::PageDown as usize] = None;
+    keymap[ScanCodeValue::PageDown as usize] = Some(KeymapSet {
+        not_shift: KeymapValue::PageDown,
+        shift: KeymapValue::PageDown,
+        alt1: KeymapValue::AltPageDown,
+        alt2: KeymapValue::AltPageDown,
+        alt_shift: KeymapValue::AltPageDown,
+        ctrl: KeymapValue::ControlPageDown,
+    });
     keymap[ScanCodeValue::CursorRight as usize] = Some(KeymapSet {
         not_shift: KeymapValue::Right,
         shift: KeymapValue::Right,
