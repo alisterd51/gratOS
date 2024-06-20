@@ -3,7 +3,10 @@ mod history;
 #[cfg(debug_assertions)]
 use crate::{print, println};
 
-use super::vga::{Color, ColorCode};
+use super::{
+    shell::Shell,
+    vga::{Color, ColorCode},
+};
 
 const HISTORY_BUFFER_HEIGHT: usize = 1000;
 const NUMBER_OF_REGULAR_TTY: usize = 12;
@@ -219,9 +222,21 @@ struct Tty {
     descriptors: [TtyDescriptor; NUMBER_OF_REGULAR_TTY],
     writer: Writer,
     history: History,
+    shell: Shell,
 }
 
 impl Tty {
+    fn new() -> Self {
+        Tty {
+            escape_state: EscapeState::Normal,
+            id: 0,
+            descriptors: [TtyDescriptor::new(); NUMBER_OF_REGULAR_TTY],
+            writer: Writer::new(),
+            history: History::new(),
+            shell: Shell::new(),
+        }
+    }
+
     fn apply_byte(&mut self, byte: u8) {
         match byte {
             b'\n' | b'\r' => self.new_line(),
@@ -530,15 +545,7 @@ pub fn _print(args: fmt::Arguments) {
     WRITER.lock().write_fmt(args).unwrap();
 }
 
-static WRITER: Lazy<Mutex<Tty>> = Lazy::new(|| {
-    Mutex::new(Tty {
-        escape_state: EscapeState::Normal,
-        id: 0,
-        descriptors: [TtyDescriptor::new(); NUMBER_OF_REGULAR_TTY],
-        writer: Writer::new(),
-        history: History::new(),
-    })
-});
+static WRITER: Lazy<Mutex<Tty>> = Lazy::new(|| Mutex::new(Tty::new()));
 
 #[allow(clippy::inline_always)]
 #[inline(always)]
