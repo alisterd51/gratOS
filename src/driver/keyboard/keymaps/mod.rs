@@ -19,6 +19,7 @@ pub enum KeymapValue {
     RightShift,
     RightAlt,
     Delete,
+    AltDelete,
     Right,
     AltRight,
     ControlRight,
