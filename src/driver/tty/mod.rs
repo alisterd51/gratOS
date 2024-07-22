@@ -215,8 +215,8 @@ enum EscapeState {
 
 struct Tty {
     escape_state: EscapeState,
-    tty_id: usize,
-    tty_descriptors: [TtyDescriptor; NUMBER_OF_REGULAR_TTY],
+    id: usize,
+    descriptors: [TtyDescriptor; NUMBER_OF_REGULAR_TTY],
     writer: Writer,
     history: History,
 }
@@ -314,7 +314,7 @@ impl Tty {
                     }
                     byte => match byte {
                         byte @ b'0'..=b'9' => {
-                            let digit = (byte - b'0') as u32;
+                            let digit = u32::from(byte - b'0');
                             let csi_param = match n {
                                 CsiParam::Undefined => {
                                     if digit == 0 {
@@ -336,11 +336,11 @@ impl Tty {
     }
 
     fn backspace(&mut self) {
-        if self.tty_descriptors[self.tty_id].column_position > 0 {
-            self.tty_descriptors[self.tty_id].column_position -= 1;
-        } else if self.tty_descriptors[self.tty_id].row_position > 0 {
-            self.tty_descriptors[self.tty_id].row_position -= 1;
-            self.tty_descriptors[self.tty_id].column_position = BUFFER_WIDTH - 1;
+        if self.descriptors[self.id].column_position > 0 {
+            self.descriptors[self.id].column_position -= 1;
+        } else if self.descriptors[self.id].row_position > 0 {
+            self.descriptors[self.id].row_position -= 1;
+            self.descriptors[self.id].column_position = BUFFER_WIDTH - 1;
         }
         self.write_ascii(b' ');
         self.update_cursor();
@@ -352,74 +352,74 @@ impl Tty {
 
     fn write_byte(&mut self, byte: u8) {
         self.write_ascii(byte);
-        if self.tty_descriptors[self.tty_id].column_position + 1 >= BUFFER_WIDTH {
+        if self.descriptors[self.id].column_position + 1 >= BUFFER_WIDTH {
             self.new_line();
         } else {
-            self.tty_descriptors[self.tty_id].column_position += 1;
+            self.descriptors[self.id].column_position += 1;
         }
         self.update_cursor();
     }
 
     fn write_ascii(&mut self, byte: u8) {
-        let row = self.tty_descriptors[self.tty_id].row_position;
-        let col = self.tty_descriptors[self.tty_id].column_position;
-        let color_code = self.tty_descriptors[self.tty_id].color_code;
+        let row = self.descriptors[self.id].row_position;
+        let col = self.descriptors[self.id].column_position;
+        let color_code = self.descriptors[self.id].color_code;
         let c = ScreenChar {
             ascii_character: byte,
             color_code,
         };
 
-        self.writer.set_char(c, col, row);
-        self.history.set_char(col, row, c);
+        self.writer.set_char(&c, col, row);
+        self.history.set_char(&c, col, row);
     }
 
     fn new_line(&mut self) {
-        if self.tty_descriptors[self.tty_id].row_position < BUFFER_HEIGHT - 1 {
-            self.tty_descriptors[self.tty_id].row_position += 1;
+        if self.descriptors[self.id].row_position < BUFFER_HEIGHT - 1 {
+            self.descriptors[self.id].row_position += 1;
         } else {
             self.next_line();
         }
-        self.tty_descriptors[self.tty_id].column_position = 0;
+        self.descriptors[self.id].column_position = 0;
         self.update_cursor();
     }
 
     fn old_line(&mut self) {
-        if self.tty_descriptors[self.tty_id].row_position > 0 {
-            self.tty_descriptors[self.tty_id].row_position -= 1;
+        if self.descriptors[self.id].row_position > 0 {
+            self.descriptors[self.id].row_position -= 1;
         } else {
             self.previous_line();
         }
-        self.tty_descriptors[self.tty_id].column_position = BUFFER_WIDTH - 1;
+        self.descriptors[self.id].column_position = BUFFER_WIDTH - 1;
         self.update_cursor();
     }
 
     fn next_line(&mut self) {
         if self.history.next_line().is_ok() {
             let screen = self.history.get_screen();
-            self.writer.set_screen(screen);
+            self.writer.set_screen(&screen);
         } else {
             self.history.new_line();
             let screen = self.history.get_screen();
-            self.writer.set_screen(screen);
+            self.writer.set_screen(&screen);
         }
     }
 
     fn previous_line(&mut self) {
         if self.history.previous_line().is_ok() {
             let screen = self.history.get_screen();
-            self.writer.set_screen(screen);
+            self.writer.set_screen(&screen);
         }
     }
 
     fn clear_row(&mut self, row: usize) {
         let blank = ScreenChar {
             ascii_character: b' ',
-            color_code: self.tty_descriptors[self.tty_id].color_code,
+            color_code: self.descriptors[self.id].color_code,
         };
         let blank_line = [blank; BUFFER_WIDTH];
 
-        self.writer.set_line(blank_line, row);
-        self.history.set_line(blank_line, row);
+        self.writer.set_line(&blank_line, row);
+        self.history.set_line(&blank_line, row);
     }
 
     fn write_string(&mut self, s: &str) {
@@ -432,81 +432,77 @@ impl Tty {
         for row in 0..BUFFER_HEIGHT {
             self.clear_row(row);
         }
-        self.tty_descriptors[self.tty_id].row_position = 0;
-        self.tty_descriptors[self.tty_id].column_position = 0;
+        self.descriptors[self.id].row_position = 0;
+        self.descriptors[self.id].column_position = 0;
         self.update_cursor();
     }
 
     pub fn cursor_right(&mut self) {
-        if self.tty_descriptors[self.tty_id].column_position + 1 >= BUFFER_WIDTH {
+        if self.descriptors[self.id].column_position + 1 >= BUFFER_WIDTH {
             self.new_line();
         } else {
-            self.tty_descriptors[self.tty_id].column_position += 1;
+            self.descriptors[self.id].column_position += 1;
         }
         self.update_cursor();
     }
 
     pub fn cursor_left(&mut self) {
-        if self.tty_descriptors[self.tty_id].column_position == 0 {
+        if self.descriptors[self.id].column_position == 0 {
             self.old_line();
         } else {
-            self.tty_descriptors[self.tty_id].column_position -= 1;
+            self.descriptors[self.id].column_position -= 1;
         }
         self.update_cursor();
     }
 
     pub fn cursor_down(&mut self) {
-        if self.tty_descriptors[self.tty_id].row_position + 1 >= BUFFER_HEIGHT {
-            let col = self.tty_descriptors[self.tty_id].column_position;
+        if self.descriptors[self.id].row_position + 1 >= BUFFER_HEIGHT {
+            let col = self.descriptors[self.id].column_position;
             self.new_line();
-            self.tty_descriptors[self.tty_id].column_position = col;
+            self.descriptors[self.id].column_position = col;
         } else {
-            self.tty_descriptors[self.tty_id].row_position += 1;
+            self.descriptors[self.id].row_position += 1;
         }
         self.update_cursor();
     }
 
     pub fn cursor_up(&mut self) {
-        if self.tty_descriptors[self.tty_id].row_position == 0 {
-            let col = self.tty_descriptors[self.tty_id].column_position;
+        if self.descriptors[self.id].row_position == 0 {
+            let col = self.descriptors[self.id].column_position;
             self.old_line();
-            self.tty_descriptors[self.tty_id].column_position = col;
+            self.descriptors[self.id].column_position = col;
         } else {
-            self.tty_descriptors[self.tty_id].row_position -= 1;
+            self.descriptors[self.id].row_position -= 1;
         }
         self.update_cursor();
     }
 
     fn update_cursor(&self) {
         set_cursor(
-            self.tty_descriptors[self.tty_id].column_position,
-            self.tty_descriptors[self.tty_id].row_position,
+            self.descriptors[self.id].column_position,
+            self.descriptors[self.id].row_position,
         );
     }
 
-    pub fn change_tty(&mut self, id: usize) {
-        if self.history.change_tty(id).is_ok() {
+    pub fn change_tty_id(&mut self, id: usize) {
+        if self.history.change_tty_id(id).is_ok() {
             let screen = self.history.get_screen();
-            self.writer.set_screen(screen);
-            self.tty_id = id;
+            self.writer.set_screen(&screen);
+            self.id = id;
             self.update_cursor();
         }
     }
 
     fn update_color(&mut self, color_code: ColorCode) {
-        self.tty_descriptors[self.tty_id].color_code = color_code;
+        self.descriptors[self.id].color_code = color_code;
     }
 
     pub fn update_foreground_color(&mut self, color: Color) {
-        self.tty_descriptors[self.tty_id]
-            .color_code
-            .set_foreground(color);
+        self.descriptors[self.id].color_code.set_foreground(color);
     }
 
     pub fn update_background_color(&mut self, color: Color) {
-        self.tty_descriptors[self.tty_id]
-            .color_code
-            .set_background(color);
+        self.descriptors[self.id].color_code.set_background(color);
     }
 }
 
@@ -537,19 +533,21 @@ pub fn _print(args: fmt::Arguments) {
 static WRITER: Lazy<Mutex<Tty>> = Lazy::new(|| {
     Mutex::new(Tty {
         escape_state: EscapeState::Normal,
-        tty_id: 0,
-        tty_descriptors: [TtyDescriptor::new(); NUMBER_OF_REGULAR_TTY],
+        id: 0,
+        descriptors: [TtyDescriptor::new(); NUMBER_OF_REGULAR_TTY],
         writer: Writer::new(),
         history: History::new(),
     })
 });
 
+#[allow(clippy::inline_always)]
 #[inline(always)]
 pub fn clear() {
     WRITER.lock().clear();
 }
 
+#[allow(clippy::inline_always)]
 #[inline(always)]
-pub fn change_tty(id: usize) {
-    WRITER.lock().change_tty(id);
+pub fn change_tty_id(id: usize) {
+    WRITER.lock().change_tty_id(id);
 }

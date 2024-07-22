@@ -25,6 +25,10 @@ jobs:
       - name: cargo clippy --release
         run: |
           cargo clippy --release -- --deny warnings
+      - name: cargo clippy pedantic
+        run: |
+          cargo clippy -- --deny clippy::pedantic
+          cargo clippy --release -- --deny clippy::pedantic
 
   build:
     runs-on: ubuntu-latest
