@@ -1,9 +1,9 @@
-use super::{ScreenChar, BUFFER_HEIGHT, BUFFER_WIDTH};
+use super::{Line, Screen, ScreenChar, BUFFER_WIDTH};
 use crate::io::outb;
 
 #[repr(transparent)]
 struct Buffer {
-    chars: [[ScreenChar; BUFFER_WIDTH]; BUFFER_HEIGHT],
+    chars: Screen,
 }
 
 unsafe impl Send for Writer {}
@@ -19,19 +19,20 @@ impl Writer {
         }
     }
 
-    pub fn set_char(&mut self, c: ScreenChar, col: usize, row: usize) {
-        unsafe { (*self.buffer).chars[row][col] = c };
+    pub fn set_char(&mut self, c: &ScreenChar, col: usize, row: usize) {
+        unsafe { (*self.buffer).chars[row][col] = *c };
     }
 
-    pub fn set_line(&mut self, line: [ScreenChar; BUFFER_WIDTH], row: usize) {
-        unsafe { (*self.buffer).chars[row] = line };
+    pub fn set_line(&mut self, line: &Line, row: usize) {
+        unsafe { (*self.buffer).chars[row] = *line };
     }
 
-    pub fn set_screen(&mut self, screen: [[ScreenChar; BUFFER_WIDTH]; BUFFER_HEIGHT]) {
-        unsafe { (*self.buffer).chars = screen };
+    pub fn set_screen(&mut self, screen: &Screen) {
+        unsafe { (*self.buffer).chars = *screen };
     }
 }
 
+#[allow(clippy::cast_possible_truncation)]
 pub fn set_cursor(col: usize, row: usize) {
     let pos = (row * BUFFER_WIDTH + col) as u16;
 

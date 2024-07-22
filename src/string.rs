@@ -6,7 +6,7 @@ pub unsafe extern "C" fn memcpy(dest: *mut c_void, src: *const c_void, n: c_size
 
     while i < n {
         unsafe {
-            *(dest as *mut c_char).wrapping_add(i) = *(src as *const c_char).wrapping_add(i);
+            *dest.cast::<c_char>().wrapping_add(i) = *src.cast::<c_char>().wrapping_add(i);
         }
         i += 1;
     }
@@ -19,7 +19,7 @@ pub unsafe extern "C" fn memmove(
     src: *const c_void,
     n: c_size_t,
 ) -> *mut c_void {
-    if (dest as *const c_void) < src {
+    if dest.cast_const() < src {
         unsafe { memcpy(dest, src, n) }
     } else {
         let mut i: c_size_t = n;
@@ -27,7 +27,7 @@ pub unsafe extern "C" fn memmove(
         while 0 < i {
             i -= 1;
             unsafe {
-                *(dest as *mut c_char).wrapping_add(i) = *(src as *const c_char).wrapping_add(i);
+                *dest.cast::<c_char>().wrapping_add(i) = *src.cast::<c_char>().wrapping_add(i);
             }
         }
         dest
@@ -40,7 +40,7 @@ pub unsafe extern "C" fn memset(dest: *mut c_void, c: c_int, n: c_size_t) -> *mu
 
     while i < n {
         unsafe {
-            *(dest as *mut c_char).wrapping_add(i) = c as c_char;
+            *dest.cast::<c_char>().wrapping_add(i) = (c & 0xFF) as c_char;
         }
         i += 1;
     }
@@ -52,12 +52,11 @@ pub unsafe extern "C" fn memcmp(s1: *const c_void, s2: *const c_void, n: c_size_
     let mut i: c_size_t = 0;
 
     while i < n {
-        let diff = unsafe {
-            *(s1 as *const c_char).wrapping_add(i) - *(s2 as *const c_char).wrapping_add(i)
-        };
+        let diff =
+            unsafe { *s1.cast::<c_char>().wrapping_add(i) - *s2.cast::<c_char>().wrapping_add(i) };
 
         if diff != 0 {
-            return diff as c_int;
+            return c_int::from(diff);
         }
         i += 1;
     }

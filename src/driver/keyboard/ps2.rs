@@ -12,6 +12,7 @@ use super::{
     keymaps::{us_qwerty::US_QUERTY_KEYMAP, Keymap, KeymapValue},
 };
 
+#[allow(clippy::struct_excessive_bools)]
 struct KeyModifier {
     left_shift: bool,
     right_shift: bool,
@@ -72,9 +73,9 @@ impl Keyboard {
     pub fn get_input(&mut self) {
         let status = unsafe { inb(0x64) };
         if status & 0x1 == 0x1 {
-            let mut data = unsafe { inb(0x60) as u16 };
+            let mut data = unsafe { u16::from(inb(0x60)) };
             if data == 0xE0 {
-                data = data << 8 | unsafe { inb(0x60) as u16 };
+                data = data << 8 | unsafe { u16::from(inb(0x60)) };
             }
             let _ = self.buffer.push(data);
         }
@@ -82,40 +83,26 @@ impl Keyboard {
 
     pub fn interpret_to_vga_text_mode(&mut self) {
         while let Some(scancode) = self.buffer.pop() {
-            self.interpret(scancode)
+            self.interpret(scancode);
         }
     }
 
     fn interpret(&mut self, scancode: u16) {
         if let Some(keymap_value) = self.scancode_to_keymapvalue(scancode) {
-            self.interpret_keymapvalue(keymap_value, self.is_pressed(scancode));
+            self.interpret_keymapvalue(keymap_value, is_pressed(scancode));
         }
     }
 
+    // TODO: refactor thi function
+    #[allow(clippy::too_many_lines)]
     fn interpret_keymapvalue(&mut self, keymap_value: KeymapValue, pressed: bool) {
         match keymap_value {
-            KeymapValue::Ascii(c) => {
+            KeymapValue::Ascii(c) | KeymapValue::Lowercase(c) | KeymapValue::Alt(c) => {
                 if pressed {
                     print!("{}", c);
                 }
             }
-            KeymapValue::Lowercase(c) => {
-                if pressed {
-                    print!("{}", c);
-                }
-            }
-            KeymapValue::Alt(c) => {
-                if pressed {
-                    print!("{}", c);
-                }
-            }
-            KeymapValue::Control(c) => {
-                if pressed {
-                    let c = ((c as u8) & 0x3F) as char;
-                    print!("{}", c);
-                }
-            }
-            KeymapValue::ControlAlt(c) => {
+            KeymapValue::Control(c) | KeymapValue::ControlAlt(c) => {
                 if pressed {
                     let c = ((c as u8) & 0x3F) as char;
                     print!("{}", c);
@@ -169,62 +156,62 @@ impl Keyboard {
             }
             KeymapValue::F1 => {
                 if pressed {
-                    tty::change_tty(0);
+                    tty::change_tty_id(0);
                 }
             }
             KeymapValue::F2 => {
                 if pressed {
-                    tty::change_tty(1);
+                    tty::change_tty_id(1);
                 }
             }
             KeymapValue::F3 => {
                 if pressed {
-                    tty::change_tty(2);
+                    tty::change_tty_id(2);
                 }
             }
             KeymapValue::F4 => {
                 if pressed {
-                    tty::change_tty(3);
+                    tty::change_tty_id(3);
                 }
             }
             KeymapValue::F5 => {
                 if pressed {
-                    tty::change_tty(4);
+                    tty::change_tty_id(4);
                 }
             }
             KeymapValue::F6 => {
                 if pressed {
-                    tty::change_tty(5);
+                    tty::change_tty_id(5);
                 }
             }
             KeymapValue::F7 => {
                 if pressed {
-                    tty::change_tty(6);
+                    tty::change_tty_id(6);
                 }
             }
             KeymapValue::F8 => {
                 if pressed {
-                    tty::change_tty(7);
+                    tty::change_tty_id(7);
                 }
             }
             KeymapValue::F9 => {
                 if pressed {
-                    tty::change_tty(8);
+                    tty::change_tty_id(8);
                 }
             }
             KeymapValue::F10 => {
                 if pressed {
-                    tty::change_tty(9);
+                    tty::change_tty_id(9);
                 }
             }
             KeymapValue::F11 => {
                 if pressed {
-                    tty::change_tty(10);
+                    tty::change_tty_id(10);
                 }
             }
             KeymapValue::F12 => {
                 if pressed {
-                    tty::change_tty(11);
+                    tty::change_tty_id(11);
                 }
             }
             _ => {}
@@ -244,15 +231,14 @@ impl Keyboard {
                     return Some(keymap_set.alt2);
                 } else if self.key_modifier.shift() {
                     return Some(keymap_set.shift);
-                } else {
-                    return Some(keymap_set.not_shift);
                 }
+                return Some(keymap_set.not_shift);
             }
         }
         None
     }
+}
 
-    fn is_pressed(&self, scancode: u16) -> bool {
-        scancode & 0x80 == 0x0
-    }
+fn is_pressed(scancode: u16) -> bool {
+    scancode & 0x80 == 0x0
 }
