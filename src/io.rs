@@ -25,3 +25,14 @@ pub unsafe fn outb(value: u8, port: u16) {
         );
     }
 }
+
+#[allow(dead_code)]
+pub unsafe fn outw(value: u16, port: u16) {
+    unsafe {
+        asm!(
+            "out dx, ax",
+            in("ax") value,
+            in("dx") port
+        );
+    }
+}

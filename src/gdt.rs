@@ -27,7 +27,7 @@ pub fn init() {
         *GDT = [
             SegmentDescriptor::null(),                // Null segment
             SegmentDescriptor::new(0, 0xFFFFF, 0x9A), // Kernel code segment
-            SegmentDescriptor::new(0, 0xFFFFF, 0x92), // Kernel data segment
+            SegmentDescriptor::new(0, 0xFFFFF, 0x93), // Kernel data segment
             SegmentDescriptor::new(0, 0xFFFFF, 0x96), // Kernel stack segment
             SegmentDescriptor::new(0, 0xFFFFF, 0xFA), // User code segment
             SegmentDescriptor::new(0, 0xFFFFF, 0xF2), // User data segment
