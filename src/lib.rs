@@ -5,8 +5,14 @@
 mod driver;
 mod gdt;
 mod io;
-mod print_kernel_stack;
 mod string;
+mod commands {
+    pub mod halt;
+    pub mod print_gdt;
+    pub mod print_kernel_stack;
+    pub mod reboot;
+    pub mod shutdown;
+}
 
 use core::panic::PanicInfo;
 use driver::keyboard;
@@ -28,11 +34,14 @@ pub extern "C" fn kmain() -> ! {
     tty::test_colors();
 
     #[cfg(debug_assertions)]
-    print_kernel_stack::test();
+    commands::print_gdt::print_gdt();
+
+    #[cfg(debug_assertions)]
+    commands::print_kernel_stack::test();
 
     println!("{}42{}", tty::FG_GREEN, tty::FG_RESET);
-
-    print_kernel_stack::print_kernel_stack(0);
+    commands::print_gdt::print_gdt();
+    commands::print_kernel_stack::print_kernel_stack(0);
 
     let mut keyboard = keyboard::ps2::Keyboard::new();
 
