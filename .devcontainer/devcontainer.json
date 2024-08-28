@@ -1,6 +1,6 @@
 {
     "name": "dev",
-    "image": "ghcr.io/alisterd51/cross-toolchain:nightly",
+    "image": "ghcr.io/alisterd51/cross-toolchain:latest",
     "customizations": {
         "vscode": {
             "extensions": [
