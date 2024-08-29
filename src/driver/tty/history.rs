@@ -72,6 +72,8 @@ impl History {
         }
     }
 
+    // TODO: remove if useless
+    #[allow(dead_code)]
     pub fn get_line(&self, y: usize) -> Result<Line, ()> {
         if y < BUFFER_HEIGHT {
             Ok(unsafe {
