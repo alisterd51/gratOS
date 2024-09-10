@@ -4,7 +4,7 @@
 
 ## Presentation
 
-Kernel from scratch (in rust)
+Kernel from scratch written in [rust](https://www.rust-lang.org/)
 
 ## Run
 
