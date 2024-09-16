@@ -13,8 +13,8 @@ pub struct Writer {
 }
 
 impl Writer {
-    pub fn new() -> Self {
-        Writer {
+    pub const fn new() -> Self {
+        Self {
             buffer: 0xB8000 as *mut Buffer,
         }
     }

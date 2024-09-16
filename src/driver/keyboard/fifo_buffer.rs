@@ -7,8 +7,8 @@ pub struct FifoBuffer {
 }
 
 impl FifoBuffer {
-    pub const fn new() -> FifoBuffer {
-        FifoBuffer {
+    pub const fn new() -> Self {
+        Self {
             begin: 0,
             end: 0,
             chars: [0u16; BUFFER_SIZE],

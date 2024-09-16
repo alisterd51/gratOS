@@ -16,8 +16,8 @@ struct HistoryDescriptor {
 }
 
 impl HistoryDescriptor {
-    pub const fn new() -> HistoryDescriptor {
-        HistoryDescriptor {
+    pub const fn new() -> Self {
+        Self {
             begin: 0,
             current: 0,
             end: 0,
@@ -34,8 +34,8 @@ pub struct History {
 unsafe impl Send for History {}
 
 impl History {
-    pub fn new() -> History {
-        History {
+    pub const fn new() -> Self {
+        Self {
             tty_id: 0,
             descriptors: [HistoryDescriptor::new(); NUMBER_OF_REGULAR_TTY],
             chars: unsafe { BUFFER },
