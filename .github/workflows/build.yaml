@@ -15,6 +15,19 @@ jobs:
         run: |
           cargo fmt --check
 
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+      - name: cargo fix
+        run: |
+          cargo fix
+          git diff --exit-code
+      - name: cargo fix edition
+        run: |
+          cargo fix --edition
+          git diff --exit-code
+
   clippy:
     runs-on: ubuntu-latest
     steps:
