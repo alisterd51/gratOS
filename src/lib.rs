@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 #![feature(c_size_t)]
+#![feature(const_refs_to_static)]
 
 mod driver;
 mod gdt;

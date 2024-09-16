@@ -273,8 +273,8 @@ struct ScanCodeSet {
 }
 
 impl ScanCodeSet {
-    const fn new() -> ScanCodeSet {
-        ScanCodeSet {
+    const fn new() -> Self {
+        Self {
             scan_code_set_1_0: &SCAN_CODE_SET_1_0,
             scan_code_set_1_1: &SCAN_CODE_SET_1_1,
         }

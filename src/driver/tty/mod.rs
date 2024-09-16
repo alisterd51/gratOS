@@ -191,8 +191,8 @@ struct TtyDescriptor {
 }
 
 impl TtyDescriptor {
-    pub const fn new() -> TtyDescriptor {
-        TtyDescriptor {
+    pub const fn new() -> Self {
+        Self {
             row_position: 0,
             column_position: 0,
             color_code: DEFAULT_COLOR_CODE,
@@ -222,6 +222,16 @@ struct Tty {
 }
 
 impl Tty {
+    pub const fn new() -> Self {
+        Self {
+            escape_state: EscapeState::Normal,
+            id: 0,
+            descriptors: [TtyDescriptor::new(); NUMBER_OF_REGULAR_TTY],
+            writer: Writer::new(),
+            history: History::new(),
+        }
+    }
+
     fn apply_byte(&mut self, byte: u8) {
         match byte {
             b'\n' | b'\r' => self.new_line(),
@@ -537,15 +547,7 @@ pub fn _print(args: fmt::Arguments) {
     WRITER.lock().write_fmt(args).unwrap();
 }
 
-static WRITER: Lazy<Mutex<Tty>> = Lazy::new(|| {
-    Mutex::new(Tty {
-        escape_state: EscapeState::Normal,
-        id: 0,
-        descriptors: [TtyDescriptor::new(); NUMBER_OF_REGULAR_TTY],
-        writer: Writer::new(),
-        history: History::new(),
-    })
-});
+static WRITER: Lazy<Mutex<Tty>> = Lazy::new(|| Mutex::new(Tty::new()));
 
 #[allow(clippy::inline_always)]
 #[inline(always)]

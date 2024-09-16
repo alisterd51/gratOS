@@ -26,8 +26,8 @@ struct KeyModifier {
 }
 
 impl KeyModifier {
-    const fn new() -> KeyModifier {
-        KeyModifier {
+    const fn new() -> Self {
+        Self {
             left_shift: false,
             right_shift: false,
             alt: false,
@@ -61,8 +61,8 @@ pub struct Keyboard {
 }
 
 impl Keyboard {
-    pub const fn new() -> Keyboard {
-        Keyboard {
+    pub const fn new() -> Self {
+        Self {
             buffer: FifoBuffer::new(),
             key_modifier: KeyModifier::new(),
             keymap: &US_QUERTY_KEYMAP,
