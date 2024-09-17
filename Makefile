@@ -41,14 +41,14 @@ ${BUILDDIR}:
 ${OBJDIR}:
 	mkdir -p $@
 
-${OBJDIR}/%.o: arch/${ARCH}/%.s ${OBJDIR}
-	${AS} $< -o $@
+# ${OBJDIR}/%.o: arch/${ARCH}/%.s ${OBJDIR}
+# 	${AS} $< -o $@
 
 target/target/${BUILD}/libgratos.a: $(shell find src -type f -name '*.rs') Cargo.toml
 	${CARGO} build ${CARGOFLAGS.${BUILD}}
 
-${BUILDDIR}/${BIN}: ${OBJDIR} ${OBJDIR}/start.o target/target/${BUILD}/libgratos.a
-	${LD} -o ${BUILDDIR}/${BIN} -T arch/${ARCH}/link.ld ${OBJDIR}/start.o target/target/${BUILD}/libgratos.a
+${BUILDDIR}/${BIN}: ${OBJDIR} target/target/${BUILD}/libgratos.a
+	${LD} -o ${BUILDDIR}/${BIN} -T arch/${ARCH}/link.ld target/target/${BUILD}/libgratos.a
 	grub-file --is-${ARCH}-multiboot ${BUILDDIR}/${BIN}
 
 ${BUILDDIR}/${ISO}: ${BUILDDIR}/${BIN}
