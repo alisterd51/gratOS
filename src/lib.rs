@@ -7,10 +7,13 @@ mod gdt;
 mod io;
 mod string;
 
+use core::arch::global_asm;
 use core::panic::PanicInfo;
 use driver::console;
 use driver::keyboard;
 use driver::shell;
+
+global_asm!(include_str!("../arch/x86/start.s"));
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
