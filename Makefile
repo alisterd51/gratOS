@@ -55,7 +55,7 @@ ${BUILDDIR}/${ISO}: ${BUILDDIR}/${BIN}
 	mkdir -p ${ISODIR}/boot/grub
 	cp ${BUILDDIR}/${BIN} ${ISODIR}/boot/${BIN}
 	cp ${GRUBCFG} ${ISODIR}/boot/grub/grub.cfg
-	grub-mkrescue --compress=xz -o ${BUILDDIR}/${ISO} ${ISODIR}
+	grub-mkrescue -o ${BUILDDIR}/${ISO} ${ISODIR}
 
 .PHONY: clean
 clean:
