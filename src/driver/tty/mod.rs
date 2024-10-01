@@ -60,8 +60,8 @@ pub const FG_BRIGHT_CYAN: &str = "\x1B[96m";
 #[allow(dead_code)]
 pub const FG_BRIGHT_WHITE: &str = "\x1B[97m";
 #[allow(dead_code)]
-
 pub const FG_RESET: &str = "\x1B[39m";
+
 #[allow(dead_code)]
 pub const BG_BLACK: &str = "\x1B[40m";
 #[allow(dead_code)]
@@ -515,13 +515,20 @@ impl fmt::Write for Tty {
 
 #[macro_export]
 macro_rules! print {
-    ($($arg:tt)*) => ($crate::driver::tty::_print(format_args!($($arg)*)));
+    ($($arg:tt)*) => {{
+        #[allow(clippy::used_underscore_items)]
+        $crate::driver::tty::_print(format_args!($($arg)*));
+    }};
 }
 
 #[macro_export]
 macro_rules! println {
-    () => ($crate::print!("\n"));
-    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
+    () => {
+        $crate::print!("\n")
+    };
+    ($($arg:tt)*) => {{
+        $crate::print!("{}\n", format_args!($($arg)*));
+    }};
 }
 
 #[doc(hidden)]
