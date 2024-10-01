@@ -1,6 +1,6 @@
 use core::ffi::{c_char, c_int, c_size_t, c_void};
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn memcpy(dest: *mut c_void, src: *const c_void, n: c_size_t) -> *mut c_void {
     let mut i: c_size_t = 0;
 
@@ -13,7 +13,7 @@ pub unsafe extern "C" fn memcpy(dest: *mut c_void, src: *const c_void, n: c_size
     dest
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn memmove(
     dest: *mut c_void,
     src: *const c_void,
@@ -34,7 +34,7 @@ pub unsafe extern "C" fn memmove(
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn memset(dest: *mut c_void, c: c_int, n: c_size_t) -> *mut c_void {
     let mut i: c_size_t = 0;
 
@@ -47,7 +47,7 @@ pub unsafe extern "C" fn memset(dest: *mut c_void, c: c_int, n: c_size_t) -> *mu
     dest
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn memcmp(s1: *const c_void, s2: *const c_void, n: c_size_t) -> c_int {
     let mut i: c_size_t = 0;
 

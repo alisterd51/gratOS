@@ -18,7 +18,7 @@ fn panic(info: &PanicInfo) -> ! {
     loop {}
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn kmain() -> ! {
     gdt::init();
 
