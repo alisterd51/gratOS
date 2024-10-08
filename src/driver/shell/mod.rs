@@ -76,7 +76,7 @@ impl Shell {
         } else if compare_command(b"reboot", &self.command) {
             reboot::reboot();
         } else if compare_command(b"shutdown", &self.command) {
-            shutdown::shutdown_qemu();
+            shutdown::qemu();
         } else {
             println!("command not found");
         }
