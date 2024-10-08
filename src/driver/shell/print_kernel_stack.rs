@@ -2,6 +2,7 @@ use crate::print;
 use core::arch::asm;
 
 #[cfg(debug_assertions)]
+#[allow(dead_code)]
 pub fn test() {
     #[allow(unused_variables)]
     let alphabet = [

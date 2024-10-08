@@ -64,25 +64,25 @@ qemu-system-x86_64 -cdrom gratos.x86.iso
     - [x] Handle different screens, and keyboard shortcuts to switch easily between then.
 - [ ] KFS-2 (gratOS:0.2.0):
   - [ ] Mandatory:
-    - [ ] create a Global Descriptor Table
-    - [ ] Your GDT must contain:
-      - [ ] Kernel Code
-      - [ ] Kernel Data
-      - [ ] Kernel stack
-      - [ ] User code
-      - [ ] User data
-      - [ ] User stack
+    - [x] create a Global Descriptor Table
+    - [x] Your GDT must contain:
+      - [x] Kernel Code
+      - [x] Kernel Data
+      - [x] Kernel stack
+      - [x] User code
+      - [x] User data
+      - [x] User stack
     - [ ] Your work must not exceed 10 MB.
-    - [ ] You must declare your GDT to the BIOS.
-    - [ ] The GDT must be set at address 0x00000800.
-    - [ ] When this is done, you have to code a tool to print the kernel stack, in a human-friendly way. (Tip: If you haven’t made a printk yet, now is a good time !)
-  - [ ] Bonus:
+    - [x] You must declare your GDT to the BIOS.
+    - [x] The GDT must be set at address 0x00000800.
+    - [x] When this is done, you have to code a tool to print the kernel stack, in a human-friendly way. (Tip: If you haven’t made a printk yet, now is a good time !)
+  - [x] Bonus:
     - [x] Assuming your keyboard work correctly in your Kernel, and you able to catch an entry, let’s code a Shell !
         Not a POSIX Shell, just a minimalistic shell with a few commands, for debugging purposes.
     - [x] For example, you could implement the print-kernel-stack-thing in this shell, and some other things like reboot, halt and such.
       - [x] hello
-      - [ ] print-kernel-stack-thing
-      - [ ] reboot
-      - [ ] halt
+      - [x] print-kernel-stack-thing
+      - [x] reboot
+      - [x] halt
 - [x] Other:
   - [x] add CI to build and serve an iso of gratOS
