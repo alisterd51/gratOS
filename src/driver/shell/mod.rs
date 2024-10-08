@@ -1,4 +1,9 @@
+mod halt;
 mod hello;
+mod print_gdt;
+mod print_kernel_stack;
+mod reboot;
+mod shutdown;
 
 use spin::{Lazy, Mutex};
 
@@ -62,6 +67,16 @@ impl Shell {
     fn process(&mut self) {
         if compare_command(b"hello", &self.command) {
             hello::hello();
+        } else if compare_command(b"halt", &self.command) {
+            halt::halt();
+        } else if compare_command(b"print_gdt", &self.command) {
+            print_gdt::print_gdt();
+        } else if compare_command(b"print_kernel_stack", &self.command) {
+            print_kernel_stack::print_kernel_stack(0);
+        } else if compare_command(b"reboot", &self.command) {
+            reboot::reboot();
+        } else if compare_command(b"shutdown", &self.command) {
+            shutdown::shutdown_qemu();
         } else {
             println!("command not found");
         }

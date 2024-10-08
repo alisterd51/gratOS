@@ -5,7 +5,6 @@
 mod driver;
 mod gdt;
 mod io;
-mod print_kernel_stack;
 mod string;
 
 use core::panic::PanicInfo;
@@ -28,12 +27,7 @@ pub extern "C" fn kmain() -> ! {
     #[cfg(debug_assertions)]
     console::test_colors();
 
-    #[cfg(debug_assertions)]
-    print_kernel_stack::test();
-
     println!("{}42{}", console::FG_GREEN, console::FG_RESET);
-
-    print_kernel_stack::print_kernel_stack(0);
 
     let mut keyboard = keyboard::ps2::Keyboard::new();
 
