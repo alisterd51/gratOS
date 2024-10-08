@@ -62,8 +62,8 @@ qemu-system-x86_64 -cdrom gratos.x86.iso
       - [x] println!
     - [x] Handle keyboard entries and print them.
     - [x] Handle different screens, and keyboard shortcuts to switch easily between then.
-- [ ] KFS-2 (gratOS:0.2.0):
-  - [ ] Mandatory:
+- [x] KFS-2 (gratOS:0.2.0):
+  - [x] Mandatory:
     - [x] create a Global Descriptor Table
     - [x] Your GDT must contain:
       - [x] Kernel Code
@@ -72,7 +72,7 @@ qemu-system-x86_64 -cdrom gratos.x86.iso
       - [x] User code
       - [x] User data
       - [x] User stack
-    - [ ] Your work must not exceed 10 MB.
+    - [x] Your work must not exceed 10 MB.
     - [x] You must declare your GDT to the BIOS.
     - [x] The GDT must be set at address 0x00000800.
     - [x] When this is done, you have to code a tool to print the kernel stack, in a human-friendly way. (Tip: If you haven’t made a printk yet, now is a good time !)
