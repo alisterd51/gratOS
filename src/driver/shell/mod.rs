@@ -33,7 +33,7 @@ impl ShellState {
         Self::Uninitialized
     }
 
-    fn get(self) -> Self {
+    const fn get(self) -> Self {
         self
     }
 
@@ -64,7 +64,7 @@ impl Shell {
         }
     }
 
-    fn process(&mut self) {
+    fn process(&self) {
         if compare_command(b"hello", &self.command) {
             hello::hello();
         } else if compare_command(b"halt", &self.command) {
@@ -137,15 +137,15 @@ pub fn interpret(id: usize) {
     }
 }
 
-pub fn ps1() -> &'static str {
+pub const fn ps1() -> &'static str {
     PS1
 }
 
 // termcaps: not implemented yet
-pub fn up(_id: usize) {}
+pub const fn up(_id: usize) {}
 
-pub fn down(_id: usize) {}
+pub const fn down(_id: usize) {}
 
-pub fn left(_id: usize) {}
+pub const fn left(_id: usize) {}
 
-pub fn right(_id: usize) {}
+pub const fn right(_id: usize) {}
