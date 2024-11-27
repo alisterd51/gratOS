@@ -280,7 +280,7 @@ impl ScanCodeSet {
         }
     }
 
-    fn from(&mut self, scancode: u16) -> Option<ScanCodeValue> {
+    const fn from(&self, scancode: u16) -> Option<ScanCodeValue> {
         let scancode = scancode & 0xFF7F;
 
         if scancode & 0xFF00 == 0x0 {

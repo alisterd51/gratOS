@@ -351,12 +351,10 @@ impl Console {
     }
 
     fn next_line(&mut self) {
-        if self.history.next_line().is_ok() {
-            self.update_screen();
-        } else {
+        if self.history.next_line().is_err() {
             self.history.new_line();
-            self.update_screen();
         }
+        self.update_screen();
     }
 
     fn clear_row(&mut self, row: usize) {
@@ -385,19 +383,19 @@ impl Console {
         self.update_cursor();
     }
 
-    fn cursor_right(&mut self) {
+    const fn cursor_right(&self) {
         shell::right(self.id);
     }
 
-    fn cursor_left(&mut self) {
+    const fn cursor_left(&self) {
         shell::left(self.id);
     }
 
-    fn cursor_down(&mut self) {
+    const fn cursor_down(&self) {
         shell::down(self.id);
     }
 
-    fn cursor_up(&mut self) {
+    const fn cursor_up(&self) {
         shell::up(self.id);
     }
 
@@ -440,7 +438,7 @@ impl Console {
         self.descriptors[self.id].color_code.set_background(color);
     }
 
-    fn get_tty_id(&self) -> usize {
+    const fn get_tty_id(&self) -> usize {
         self.id
     }
 }

@@ -63,7 +63,7 @@ pub fn init() {
 
 impl SegmentDescriptor {
     const fn new(base: u32, limit: u32, access: u8) -> Self {
-        SegmentDescriptor {
+        Self {
             limit_low: (limit & 0xFFFF) as u16,
             base_low: (base & 0xFFFF) as u16,
             base_middle: ((base >> 16) & 0xFF) as u8,
@@ -74,7 +74,7 @@ impl SegmentDescriptor {
     }
 
     const fn null() -> Self {
-        SegmentDescriptor {
+        Self {
             limit_low: 0,
             base_low: 0,
             base_middle: 0,

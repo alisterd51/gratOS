@@ -42,15 +42,15 @@ impl KeyModifier {
         }
     }
 
-    fn shift(&self) -> bool {
+    const fn shift(&self) -> bool {
         (self.left_shift | self.right_shift) ^ self.caps_lock
     }
 
-    fn alt(&self) -> bool {
+    const fn alt(&self) -> bool {
         self.alt | self.alt_gr
     }
 
-    fn control(&self) -> bool {
+    const fn control(&self) -> bool {
         self.left_control | self.right_control
     }
 }
@@ -96,6 +96,7 @@ impl Keyboard {
     }
 
     // TODO: refactor thi function
+    #[allow(clippy::cognitive_complexity)]
     #[allow(clippy::too_many_lines)]
     fn interpret_keymapvalue(&mut self, keymap_value: KeymapValue, pressed: bool) {
         match keymap_value {
@@ -230,7 +231,7 @@ impl Keyboard {
         }
     }
 
-    fn scancode_to_keymapvalue(&mut self, scancode: u16) -> Option<KeymapValue> {
+    const fn scancode_to_keymapvalue(&self, scancode: u16) -> Option<KeymapValue> {
         if let Some(scan_code_value) = self.scan_code_set.from(scancode) {
             if let Some(keymap_set) = self.keymap[scan_code_value as usize] {
                 if self.key_modifier.control() {
@@ -251,6 +252,6 @@ impl Keyboard {
     }
 }
 
-fn is_pressed(scancode: u16) -> bool {
+const fn is_pressed(scancode: u16) -> bool {
     scancode & 0x80 == 0x0
 }

@@ -12,7 +12,7 @@ struct SegmentDescriptor {
 // Function which parses the segment descriptor
 // Elements of a segment descriptor are quite scattered
 // so we need to combine them to get the actual values
-fn parse_segment_descriptor(descriptor: u64) -> SegmentDescriptor {
+const fn parse_segment_descriptor(descriptor: u64) -> SegmentDescriptor {
     // The base address is split into 3 parts
     // The bits from 16 to 31 are the first 16 bits of the base address
     // The bits from 32 to 39 are the next 8 bits of the base address
@@ -68,7 +68,7 @@ fn describe_flags(flags: u8) {
     );
 }
 
-fn check_bit(byte: u8, bit: u8) -> bool {
+const fn check_bit(byte: u8, bit: u8) -> bool {
     (byte & (1 << bit)) != 0
 }
 
