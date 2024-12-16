@@ -7,6 +7,7 @@ mod gdt;
 mod io;
 mod string;
 
+use core::arch::global_asm;
 use core::panic::PanicInfo;
 use driver::console;
 use driver::keyboard;
@@ -38,3 +39,5 @@ pub extern "C" fn kmain() -> ! {
         shell::interpret(console::get_tty_id());
     }
 }
+
+global_asm!(include_str!("start.s"), options(att_syntax));

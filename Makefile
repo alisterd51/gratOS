@@ -1,29 +1,21 @@
-TRIPLE	:= i686-elf
 BUILD	:= debug
 ARCH	:= x86
 
 # utlis
-AS		:= ${TRIPLE}-as
-LD		:= ${TRIPLE}-ld
-OBJDUMP	:= ${TRIPLE}-objdump
 CARGO	:= cargo
-QEMU	:= qemu-system-x86_64
+QEMU	:= qemu-system-i386
 
 # files
 LINKSCRIPT	:= arch/$(ARCH)/link.ld
-BIN			:= gratos.${ARCH}.bin
 ISO			:= gratos.${ARCH}.iso
 GRUBCFG		:= grub/grub.cfg
 
 # flags
-ASFLAGS				:=
-LDFLAGS				:= --script ${LINKSCRIPT}
 CARGOFLAGS.debug	:=
 CARGOFLAGS.release	:= --release
 
 # dirs
 BUILDDIR	:= build/${BUILD}
-OBJDIR		:= ${BUILDDIR}/obj/${ARCH}
 ISODIR		:= ${BUILDDIR}/isodir
 
 .PHONY: all
@@ -38,22 +30,13 @@ iso: ${BUILDDIR}/${ISO}
 ${BUILDDIR}:
 	mkdir -p $@
 
-${OBJDIR}:
-	mkdir -p $@
-
-${OBJDIR}/%.o: arch/${ARCH}/%.s ${OBJDIR}
-	${AS} $< -o $@
-
-target/target/${BUILD}/libgratos.a: $(shell find src -type f -name '*.rs') Cargo.toml
+target/target/${BUILD}/gratos: $(shell find src -type f -name '*.rs') $(shell find src -type f -name '*.s') Cargo.toml
 	${CARGO} build ${CARGOFLAGS.${BUILD}}
+	grub-file --is-${ARCH}-multiboot target/target/${BUILD}/gratos
 
-${BUILDDIR}/${BIN}: ${OBJDIR} ${OBJDIR}/start.o target/target/${BUILD}/libgratos.a
-	${LD} -o ${BUILDDIR}/${BIN} -T arch/${ARCH}/link.ld ${OBJDIR}/start.o target/target/${BUILD}/libgratos.a
-	grub-file --is-${ARCH}-multiboot ${BUILDDIR}/${BIN}
-
-${BUILDDIR}/${ISO}: ${BUILDDIR}/${BIN}
+${BUILDDIR}/${ISO}: target/target/${BUILD}/gratos
 	mkdir -p ${ISODIR}/boot/grub
-	cp ${BUILDDIR}/${BIN} ${ISODIR}/boot/${BIN}
+	cp target/target/${BUILD}/gratos ${ISODIR}/boot/${BIN}
 	cp ${GRUBCFG} ${ISODIR}/boot/grub/grub.cfg
 	grub-mkrescue --compress=xz -o ${BUILDDIR}/${ISO} ${ISODIR}
 

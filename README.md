@@ -84,5 +84,32 @@ qemu-system-x86_64 -cdrom gratos.x86.iso
       - [x] print-kernel-stack-thing
       - [x] reboot
       - [x] halt
+- [ ] KFS-3 (gratOS:0.3.0):
+  - [ ] Mandatory:
+    - [ ] You must enable memory paging in your Kernel
+    - [ ] You must code a memory structure that handle paging and memory rights (Careful, you don’t have the tools yet to know who’s accessing the memory, so all of this is theoric at the moment)
+    - [ ] You must define Kernel and User space
+    - [ ] You must implement a function to create / get memory pages
+    - [ ] You must implement functions to `allocate`, `free` and `get` size of a variable
+    - [ ] You must implement those functions for `virtual` and `physical` memory
+    - [ ] You must handle "kernel panics" (Print, stop the kernel)
+    - [ ] A complete memory code structure, with pagination handling
+    - [ ] Read and Write rights on memory
+    - [ ] User space memory and Kernel space memory
+    - [ ] Physical and Virtual memory
+    - [ ] Code helpers for physical memory:
+      - [ ] kmalloc
+      - [ ] kfree
+      - [ ] ksize
+      - [ ] kbrk
+    - [ ] Code helpers for virtual memory:
+      - [ ] vmalloc
+      - [ ] vfree
+      - [ ] vsize
+      - [ ] vbrk
+    - [ ] Kernel Panic handling
+    - [ ] Your work should not exceed 10 MB
+  - [ ] Bonus:
+    - [ ] try to implement `memory` `dumping` and `debug` in the last "mini-shell" subject
 - [x] Other:
   - [x] add CI to build and serve an iso of gratOS
