@@ -1,16 +1,15 @@
 mod history;
 
-use core::fmt;
-use history::History;
-use spin::{Lazy, Mutex};
-
 use super::{
     shell,
     vga::{
-        text_mode::{set_cursor, Writer},
-        Color, ColorCode, Line, ScreenChar, BUFFER_HEIGHT, BUFFER_WIDTH,
+        BUFFER_HEIGHT, BUFFER_WIDTH, Color, ColorCode, Line, ScreenChar,
+        text_mode::{Writer, set_cursor},
     },
 };
+use core::fmt;
+use history::History;
+use spin::{Lazy, Mutex};
 
 pub const NUMBER_OF_REGULAR_TTY: usize = 12;
 const HISTORY_BUFFER_HEIGHT: usize = 1000;
@@ -471,6 +470,7 @@ macro_rules! println {
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
+
     WRITER.lock().write_fmt(args).unwrap();
 }
 

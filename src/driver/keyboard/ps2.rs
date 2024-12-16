@@ -1,3 +1,7 @@
+use super::{
+    fifo_buffer::FifoBuffer,
+    keymaps::{Keymap, KeymapValue, us_qwerty::US_QUERTY_KEYMAP},
+};
 use crate::{
     driver::{
         console::{
@@ -7,11 +11,6 @@ use crate::{
     },
     io::inb,
     print,
-};
-
-use super::{
-    fifo_buffer::FifoBuffer,
-    keymaps::{us_qwerty::US_QUERTY_KEYMAP, Keymap, KeymapValue},
 };
 
 #[allow(clippy::struct_excessive_bools)]

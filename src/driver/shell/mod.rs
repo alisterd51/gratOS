@@ -5,14 +5,12 @@ mod print_kernel_stack;
 mod reboot;
 mod shutdown;
 
-use spin::{Lazy, Mutex};
-
-use crate::{print, println};
-
 use super::{
     console::NUMBER_OF_REGULAR_TTY,
-    vga::{Line, BUFFER_WIDTH},
+    vga::{BUFFER_WIDTH, Line},
 };
+use crate::{print, println};
+use spin::{Lazy, Mutex};
 
 const PS1: &str = "> ";
 

@@ -1,6 +1,5 @@
-use crate::driver::vga::{Screen, ScreenChar, ScreenCharLine, BUFFER_HEIGHT, BUFFER_WIDTH};
-
 use super::{DEFAULT_COLOR_CODE, HISTORY_BUFFER_HEIGHT, NUMBER_OF_REGULAR_TTY};
+use crate::driver::vga::{BUFFER_HEIGHT, BUFFER_WIDTH, Screen, ScreenChar, ScreenCharLine};
 
 static mut BUFFER: *mut [[ScreenCharLine; HISTORY_BUFFER_HEIGHT]; NUMBER_OF_REGULAR_TTY] =
     &mut [[[ScreenChar {
@@ -125,11 +124,7 @@ impl History {
         while self.previous_line().is_ok() {
             ok = true;
         }
-        if ok {
-            Ok(())
-        } else {
-            Err(())
-        }
+        if ok { Ok(()) } else { Err(()) }
     }
 
     pub fn end_line(&mut self) -> Result<(), ()> {
@@ -138,11 +133,7 @@ impl History {
         while self.next_line().is_ok() {
             ok = true;
         }
-        if ok {
-            Ok(())
-        } else {
-            Err(())
-        }
+        if ok { Ok(()) } else { Err(()) }
     }
 
     pub fn new_line(&mut self) {
