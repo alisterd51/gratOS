@@ -1,4 +1,4 @@
-use super::{Screen, ScreenChar, ScreenCharLine, BUFFER_WIDTH};
+use super::{BUFFER_WIDTH, Screen, ScreenChar, ScreenCharLine};
 use crate::io::outb;
 
 #[repr(transparent)]
