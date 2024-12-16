@@ -1,5 +1,11 @@
 use core::arch::asm;
 
+const KERNEL_DATA_SEGMENT_SELECTOR: u16 = 0x10;
+#[allow(dead_code)]
+const KERNEL_CODE_SEGMENT_SELECTOR: u16 = 0x08;
+#[allow(dead_code)]
+const USER_CODE_SEGMENT_SELECTOR: u16 = 0x08 | 0x03;
+
 #[repr(C, packed)]
 struct GdtDescriptor {
     limit: u16,
@@ -48,13 +54,14 @@ pub fn init() {
 
         // Reload segment selectors
         asm!(
-            "mov ax, 0x10",
+            "mov ax, {selector}",
             "mov ds, ax",
             "mov es, ax",
             "mov fs, ax",
             "mov gs, ax",
             "mov ss, ax",
-            options(nostack)
+            options(nostack),
+            selector = const KERNEL_DATA_SEGMENT_SELECTOR
         );
 
         asm!("push 0x08", "lea eax, [2f]", "push eax", "retf", "2:",);
