@@ -19,8 +19,8 @@ make run
 ### From nightly release
 
 ```bash
-wget https://github.com/alisterd51/gratOS/releases/download/nightly/gratos.x86.iso
-qemu-system-x86_64 -cdrom gratos.x86.iso
+wget https://github.com/alisterd51/gratOS/releases/download/nightly/gratos.x86.grub.iso
+qemu-system-x86_64 -cdrom gratos.x86.grub.iso
 ```
 
 ## TODO
