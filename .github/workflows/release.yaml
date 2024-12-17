@@ -14,9 +14,11 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Build ISO
         run: |
-          make iso BUILD=release
+          make iso BUILD=release BOOTLOADER=grub
+          make iso BUILD=release BOOTLOADER=limine
       - name: Release
         uses: softprops/action-gh-release@e7a8f85e1c67a31e6ed99a94b41bd0b71bbee6b8 # v2
         with:
           files: |
-            build/release/gratos.x86.iso
+            build/release/gratos.x86.grub.iso
+            build/release/gratos.x86.limine.iso
