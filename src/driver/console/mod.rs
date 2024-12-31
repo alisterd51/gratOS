@@ -1,5 +1,7 @@
 mod history;
 
+use crate::mutex::Mutex;
+
 use super::{
     shell,
     vga::{
@@ -9,7 +11,6 @@ use super::{
 };
 use core::fmt;
 use history::History;
-use spin::{Lazy, Mutex};
 
 pub const NUMBER_OF_REGULAR_TTY: usize = 12;
 const HISTORY_BUFFER_HEIGHT: usize = 1000;
@@ -474,7 +475,7 @@ pub fn _print(args: fmt::Arguments) {
     WRITER.lock().write_fmt(args).unwrap();
 }
 
-static WRITER: Lazy<Mutex<Console>> = Lazy::new(|| Mutex::new(Console::new()));
+static WRITER: Mutex<Console> = Mutex::new(Console::new());
 
 #[allow(clippy::inline_always)]
 #[inline(always)]

@@ -9,15 +9,14 @@ use super::{
     console::NUMBER_OF_REGULAR_TTY,
     vga::{BUFFER_WIDTH, Line},
 };
-use crate::{print, println};
-use spin::{Lazy, Mutex};
+use crate::{mutex::Mutex, print, println};
 
 const PS1: &str = "> ";
 
-static SHELLS: Lazy<Mutex<[Shell; NUMBER_OF_REGULAR_TTY]>> =
-    Lazy::new(|| Mutex::new([Shell::new(); NUMBER_OF_REGULAR_TTY]));
-static SHELLS_STATE: Lazy<Mutex<[ShellState; NUMBER_OF_REGULAR_TTY]>> =
-    Lazy::new(|| Mutex::new([ShellState::new(); NUMBER_OF_REGULAR_TTY]));
+static SHELLS: Mutex<[Shell; NUMBER_OF_REGULAR_TTY]> =
+    Mutex::new([Shell::new(); NUMBER_OF_REGULAR_TTY]);
+static SHELLS_STATE: Mutex<[ShellState; NUMBER_OF_REGULAR_TTY]> =
+    Mutex::new([ShellState::new(); NUMBER_OF_REGULAR_TTY]);
 
 #[derive(Clone, Copy, PartialEq)]
 enum ShellState {

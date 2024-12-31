@@ -4,6 +4,7 @@
 mod driver;
 mod gdt;
 mod io;
+mod mutex;
 
 use core::arch::global_asm;
 use core::panic::PanicInfo;
