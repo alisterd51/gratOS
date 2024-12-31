@@ -76,7 +76,7 @@ impl Keyboard {
         if status & 0x1 == 0x1 {
             let mut data = unsafe { u16::from(inb(0x60)) };
             if data == 0xE0 {
-                data = data << 8 | unsafe { u16::from(inb(0x60)) };
+                data = (data << 8) | unsafe { u16::from(inb(0x60)) };
             }
             let _ = self.buffer.push(data);
         }

@@ -1,11 +1,9 @@
 #![no_std]
 #![no_main]
-#![feature(c_size_t)]
 
 mod driver;
 mod gdt;
 mod io;
-mod string;
 
 use core::arch::global_asm;
 use core::panic::PanicInfo;
