@@ -17,14 +17,14 @@ const fn parse_segment_descriptor(descriptor: u64) -> SegmentDescriptor {
     // The bits from 16 to 31 are the first 16 bits of the base address
     // The bits from 32 to 39 are the next 8 bits of the base address
     // and the bits from 56 to 63 are the last 8 bits of the base address
-    let base = ((descriptor >> 16) & 0xFFFF) as u32
-        | (((descriptor >> 32) & 0xFF) as u32) << 16
-        | (((descriptor >> 56) & 0xFF) as u32) << 24;
+    let base = (((descriptor >> 16) & 0xFFFF) as u32)
+        | ((((descriptor >> 32) & 0xFF) as u32) << 16)
+        | ((((descriptor >> 56) & 0xFF) as u32) << 24);
 
     // The limit is split into 2 parts
     // The bits from 0 to 15 are the first 16 bits of the limit
     // The bits from 48 to 51 are the next 4 bits of the limit
-    let limit = ((descriptor & 0xFFFF) as u32) | (((descriptor >> 48) & 0xF) as u32) << 16;
+    let limit = ((descriptor & 0xFFFF) as u32) | ((((descriptor >> 48) & 0xF) as u32) << 16);
 
     // The flags are the bits from 52 to 55
     let flags = ((descriptor >> 52) & 0xF) as u8;
