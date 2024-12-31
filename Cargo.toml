@@ -10,7 +10,6 @@ test = false
 bench = false
 
 [dependencies]
-spin = "0.9.8"
 
 [profile.dev]
 panic = "abort"
