@@ -426,15 +426,15 @@ impl Console {
         }
     }
 
-    fn update_color(&mut self, color_code: ColorCode) {
+    const fn update_color(&mut self, color_code: ColorCode) {
         self.descriptors[self.id].color_code = color_code;
     }
 
-    fn update_foreground_color(&mut self, color: Color) {
+    const fn update_foreground_color(&mut self, color: Color) {
         self.descriptors[self.id].color_code.set_foreground(color);
     }
 
-    fn update_background_color(&mut self, color: Color) {
+    const fn update_background_color(&mut self, color: Color) {
         self.descriptors[self.id].color_code.set_background(color);
     }
 

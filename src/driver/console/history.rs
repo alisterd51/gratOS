@@ -98,7 +98,7 @@ impl History {
         screen
     }
 
-    pub fn previous_line(&mut self) -> Result<(), ()> {
+    pub const fn previous_line(&mut self) -> Result<(), ()> {
         if self.descriptors[self.tty_id].begin == self.descriptors[self.tty_id].current {
             Err(())
         } else {
@@ -107,7 +107,7 @@ impl History {
         }
     }
 
-    pub fn next_line(&mut self) -> Result<(), ()> {
+    pub const fn next_line(&mut self) -> Result<(), ()> {
         if self.descriptors[self.tty_id].current == self.descriptors[self.tty_id].end {
             Err(())
         } else {
@@ -118,7 +118,7 @@ impl History {
 
     // TODO: remove if useless
     #[allow(dead_code)]
-    pub fn begin_line(&mut self) -> Result<(), ()> {
+    pub const fn begin_line(&mut self) -> Result<(), ()> {
         let mut ok = false;
 
         while self.previous_line().is_ok() {
@@ -127,7 +127,7 @@ impl History {
         if ok { Ok(()) } else { Err(()) }
     }
 
-    pub fn end_line(&mut self) -> Result<(), ()> {
+    pub const fn end_line(&mut self) -> Result<(), ()> {
         let mut ok = false;
 
         while self.next_line().is_ok() {
@@ -157,7 +157,7 @@ impl History {
         }
     }
 
-    pub fn change_tty_id(&mut self, id: usize) -> Result<(), ()> {
+    pub const fn change_tty_id(&mut self, id: usize) -> Result<(), ()> {
         if id < NUMBER_OF_REGULAR_TTY && self.tty_id != id {
             self.tty_id = id;
             Ok(())

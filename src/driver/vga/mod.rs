@@ -30,11 +30,11 @@ impl ColorCode {
         Self(((background as u8) << 4) | (foreground as u8))
     }
 
-    pub fn set_foreground(&mut self, color: Color) {
+    pub const fn set_foreground(&mut self, color: Color) {
         self.0 = (self.0 & 0xF0) | (color as u8);
     }
 
-    pub fn set_background(&mut self, color: Color) {
+    pub const fn set_background(&mut self, color: Color) {
         self.0 = ((color as u8) << 4) | (self.0 & 0x0F);
     }
 }
