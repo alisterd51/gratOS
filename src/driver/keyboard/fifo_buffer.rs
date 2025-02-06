@@ -15,7 +15,7 @@ impl FifoBuffer {
         }
     }
 
-    pub fn push(&mut self, val: u16) -> Result<(), ()> {
+    pub const fn push(&mut self, val: u16) -> Result<(), ()> {
         if (self.end + 1) % BUFFER_SIZE == self.begin {
             return Err(());
         }
@@ -24,7 +24,7 @@ impl FifoBuffer {
         Ok(())
     }
 
-    pub fn pop(&mut self) -> Option<u16> {
+    pub const fn pop(&mut self) -> Option<u16> {
         if self.end == self.begin {
             return None;
         }
