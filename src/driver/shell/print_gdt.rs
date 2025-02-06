@@ -1,5 +1,4 @@
-use crate::driver;
-use crate::println;
+use crate::{driver, println};
 use core::arch::asm;
 
 struct SegmentDescriptor {

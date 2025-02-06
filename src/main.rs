@@ -6,11 +6,8 @@ mod gdt;
 mod io;
 mod mutex;
 
-use core::arch::global_asm;
-use core::panic::PanicInfo;
-use driver::console;
-use driver::keyboard;
-use driver::shell;
+use core::{arch::global_asm, panic::PanicInfo};
+use driver::{console, keyboard, shell};
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
