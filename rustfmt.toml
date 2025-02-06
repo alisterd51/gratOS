@@ -1,0 +1,10 @@
+format_code_in_doc_comments = true
+format_macro_matchers = true
+group_imports = "One"
+hex_literal_case = "Upper"
+imports_granularity = "Crate"
+normalize_comments = true
+normalize_doc_attributes = true
+reorder_impl_items = true
+use_try_shorthand = true
+where_single_line = true

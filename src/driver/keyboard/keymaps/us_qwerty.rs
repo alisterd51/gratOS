@@ -1,7 +1,7 @@
 use super::{Keymap, KeymapSet, KeymapValue};
 use crate::driver::keyboard::ScanCodeValue;
 
-// https://github.com/Stichting-MINIX-Research-Foundation/minix/blob/4db99f4012570a577414fe2a43697b2f239b699e/minix/drivers/tty/tty/keymaps/us-std.src
+// <https://github.com/Stichting-MINIX-Research-Foundation/minix/blob/4db99f4012570a577414fe2a43697b2f239b699e/minix/drivers/tty/tty/keymaps/us-std.src>
 pub const US_QUERTY_KEYMAP: Keymap = {
     let mut keymap = [None; 0x80];
     keymap[ScanCodeValue::A as usize] = Some(KeymapSet {

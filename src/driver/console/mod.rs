@@ -1,7 +1,5 @@
 mod history;
 
-use crate::mutex::Mutex;
-
 use super::{
     shell,
     vga::{
@@ -9,6 +7,7 @@ use super::{
         text_mode::{Writer, set_cursor},
     },
 };
+use crate::mutex::Mutex;
 use core::fmt;
 use history::History;
 

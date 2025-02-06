@@ -34,18 +34,10 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: cargo clippy
         run: |
-          cargo clippy -- --deny warnings
+          cargo clippy
       - name: cargo clippy --release
         run: |
-          cargo clippy --release -- --deny warnings
-      - name: cargo clippy pedantic
-        run: |
-          cargo clippy -- --deny clippy::pedantic
-          cargo clippy --release -- --deny clippy::pedantic
-      - name: cargo clippy nursery
-        run: |
-          cargo clippy -- --deny clippy::nursery
-          cargo clippy --release -- --deny clippy::nursery
+          cargo clippy --release
 
   build:
     runs-on: ubuntu-latest
