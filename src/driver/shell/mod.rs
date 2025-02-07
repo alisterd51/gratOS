@@ -52,13 +52,13 @@ impl Shell {
     }
 
     fn input_line(&mut self, line: &Line) {
-        for i in 0..BUFFER_WIDTH {
+        self.command.iter_mut().enumerate().for_each(|(i, cmd)| {
             if i < line.len() {
-                self.command[i] = line[i];
+                *cmd = line[i];
             } else {
-                self.command[i] = b'\0';
+                *cmd = b'\0';
             }
-        }
+        });
     }
 
     fn process(&self) {
@@ -89,23 +89,24 @@ fn compare_command(command: &[u8], line: &Line) -> bool {
     let mut begin = PS1.len();
     let mut end = BUFFER_WIDTH;
 
-    for (i, c) in line.iter().enumerate().take(BUFFER_WIDTH).skip(PS1.len()) {
-        if *c != b'\0' {
-            begin = i;
-            break;
-        }
+    if let Some((i, _)) = line
+        .iter()
+        .enumerate()
+        .take(BUFFER_WIDTH)
+        .skip(PS1.len())
+        .find(|&(_, &c)| c != b'\0')
+    {
+        begin = i;
     }
-    for (i, c) in line
+    if let Some((i, _)) = line
         .iter()
         .enumerate()
         .take(BUFFER_WIDTH)
         .skip(PS1.len())
         .rev()
+        .find(|&(_, &c)| c != b'\0')
     {
-        if *c != b'\0' {
-            end = i + 1;
-            break;
-        }
+        end = i + 1;
     }
     if command.len() != (end - begin) {
         return false;

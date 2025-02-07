@@ -322,14 +322,17 @@ impl Console {
         let mut new_line = [0u8; BUFFER_WIDTH];
 
         if let Ok(line) = line {
-            for i in 0..BUFFER_WIDTH {
-                let c = line[i].ascii_character;
-                if c.is_ascii_whitespace() {
-                    new_line[i] = b'\0';
-                } else {
-                    new_line[i] = line[i].ascii_character;
-                }
-            }
+            new_line
+                .iter_mut()
+                .zip(line.iter())
+                .for_each(|(new_char, screen_char)| {
+                    let c = screen_char.ascii_character;
+                    if c.is_ascii_whitespace() {
+                        *new_char = b'\0';
+                    } else {
+                        *new_char = c;
+                    }
+                });
         }
         new_line
     }
@@ -368,15 +371,11 @@ impl Console {
     }
 
     fn write_string(&mut self, s: &str) {
-        for byte in s.bytes() {
-            self.apply_byte(byte);
-        }
+        s.bytes().for_each(|byte| self.apply_byte(byte));
     }
 
     fn clear(&mut self) {
-        for row in 0..BUFFER_HEIGHT {
-            self.clear_row(row);
-        }
+        (0..BUFFER_HEIGHT).for_each(|row| self.clear_row(row));
         self.descriptors[self.id].row_position = 0;
         self.descriptors[self.id].column_position = 0;
         self.update_cursor();
@@ -551,7 +550,7 @@ pub fn test_colors() {
     println!("background reset:");
     for background in BGS {
         for foreground in FGS {
-            print!("{background}{foreground}a{FG_RESET}b{RESET}");
+            print!("{background}{foreground}a{BG_RESET}b{RESET}");
         }
         println!();
     }
