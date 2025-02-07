@@ -89,12 +89,11 @@ impl History {
             ascii_character: b' ',
             color_code: DEFAULT_COLOR_CODE,
         }; BUFFER_WIDTH]; BUFFER_HEIGHT];
-        for (i, s) in screen.iter_mut().enumerate() {
-            unsafe {
-                *s = (*self.chars)[self.tty_id]
-                    [(self.descriptors[self.tty_id].current + i) % HISTORY_BUFFER_HEIGHT];
-            }
-        }
+        let chars_ref = unsafe { &*self.chars };
+        screen.iter_mut().enumerate().for_each(|(i, s)| {
+            let index = (self.descriptors[self.tty_id].current + i) % HISTORY_BUFFER_HEIGHT;
+            *s = chars_ref[self.tty_id][index];
+        });
         screen
     }
 

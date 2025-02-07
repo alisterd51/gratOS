@@ -1,4 +1,4 @@
-use crate::print;
+use crate::{print, println};
 use core::arch::asm;
 
 #[cfg(debug_assertions)]
@@ -15,18 +15,30 @@ fn is_printable(c: u8) -> bool {
     (b' '..=b'~').contains(&c)
 }
 
-fn print_stack_line(stack: &[u8; 16], len: usize) {
-    let stack = &stack[..len];
-    for byte in stack {
-        if is_printable(*byte) {
-            print!("{}", *byte as char);
+fn print_hex(stack: &[u8; 16], len: usize) {
+    (0..16).for_each(|i| {
+        if i < len {
+            print!("{:02x} ", stack[i]);
         } else {
-            print!(".");
+            print!("   ");
         }
-    }
-    print!("\n");
+    });
 }
 
+fn print_ascii(stack: &[u8; 16], len: usize) {
+    stack[..len].iter().for_each(|&byte| {
+        print!(
+            "{}",
+            if is_printable(byte) {
+                byte as char
+            } else {
+                '.'
+            }
+        );
+    });
+}
+
+#[allow(clippy::cast_possible_truncation)]
 pub fn print_kernel_stack(bytes: u32) {
     let mut stack_pointer: u32;
     unsafe {
@@ -34,33 +46,24 @@ pub fn print_kernel_stack(bytes: u32) {
     }
 
     let mut stack_pointer = stack_pointer as *const u8;
-    let mut i = 0;
-    let mut j = 0;
     let bytes = if bytes == 0 { 128 } else { bytes };
-    let mut stack = [0u8; 16];
+    let mut remaining = bytes;
 
-    while i < bytes {
-        if j == 16 {
-            print_stack_line(&stack, j);
-            j = 0;
-        }
-
-        if j == 0 {
-            print!("{:08x}  ", stack_pointer as u32);
-        }
-
-        print!("{:02x} ", unsafe { *stack_pointer });
-        stack[j] = unsafe { *stack_pointer };
-
-        stack_pointer = unsafe { stack_pointer.offset(1) };
-        i += 1;
-        j += 1;
+    while remaining > 0 {
+        let count = if remaining >= 16 {
+            16
+        } else {
+            remaining as usize
+        };
+        let mut line = [0u8; 16];
+        line[..count].iter_mut().enumerate().for_each(|(i, byte)| {
+            *byte = unsafe { *stack_pointer.add(i) };
+        });
+        print!("{:08x}  ", stack_pointer as u32);
+        print_hex(&line, count);
+        print_ascii(&line, count);
+        println!();
+        stack_pointer = unsafe { stack_pointer.add(count) };
+        remaining -= count as u32;
     }
-
-    if j != 16 {
-        for _ in j..16 {
-            print!("   ");
-        }
-    }
-    print_stack_line(&stack, j);
 }
