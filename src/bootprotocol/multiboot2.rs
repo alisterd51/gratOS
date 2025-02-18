@@ -1,7 +1,8 @@
 use crate::{bootprotocol::MemoryMapEntry, println};
 use core::{
+    cell::UnsafeCell,
     fmt,
-    sync::atomic::{AtomicU32, Ordering},
+    ptr::{addr_of, copy_nonoverlapping},
 };
 
 struct Multiboot2TagIter {
@@ -417,30 +418,6 @@ impl fmt::Display for Multiboot2MemoryMap {
         }
 
         Ok(())
-    }
-}
-
-pub struct MemoryMapIter {
-    entries: &'static [Multiboot2MemoryMapEntry],
-    index: usize,
-}
-
-impl Iterator for MemoryMapIter {
-    type Item = MemoryMapEntry;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.entries.len() {
-            let entry = &self.entries[self.index];
-            self.index += 1;
-
-            Some(MemoryMapEntry {
-                base_addr: entry.base_addr,
-                length: entry.length,
-                entry_type: entry.entry_type,
-            })
-        } else {
-            None
-        }
     }
 }
 
@@ -941,40 +918,90 @@ enum Multiboot2Tag<'a> {
     Unknown(&'a Multiboot2Info),                    // other
 }
 
-static MULTIBOOT2_ADDR: AtomicU32 = AtomicU32::new(0);
+const MULTIBOOT2_CACHE_SIZE: usize = 8192;
+const MAX_MEMORY_ENTRIES: usize = 64;
 
-pub fn init(info_addr: u32) {
-    MULTIBOOT2_ADDR.store(info_addr, Ordering::SeqCst);
+#[repr(C, align(8))]
+struct Multiboot2Buffer([u8; MULTIBOOT2_CACHE_SIZE]);
+
+struct BootCache {
+    is_ready: bool,
+    size: usize,
+    blob: Multiboot2Buffer,
+    memory_map: [MemoryMapEntry; MAX_MEMORY_ENTRIES],
+    memory_map_count: usize,
 }
 
-pub fn get_memory_map() -> Option<MemoryMapIter> {
-    let info_addr = MULTIBOOT2_ADDR.load(Ordering::SeqCst);
-    let multiboot_info = unsafe { &*(info_addr as *const Multiboot2BootInfo) };
-    for info in multiboot_info.tags() {
-        if let Multiboot2Tag::MemoryMap(memory_map) = info.parse() {
-            let entries: &'static [Multiboot2MemoryMapEntry] = unsafe {
-                core::slice::from_raw_parts(
-                    memory_map.entries().as_ptr(),
-                    memory_map.entries().len(),
-                )
-            };
-            return Some(MemoryMapIter { entries, index: 0 });
+impl BootCache {
+    const fn empty() -> Self {
+        Self {
+            is_ready: false,
+            size: 0,
+            blob: Multiboot2Buffer([0; MULTIBOOT2_CACHE_SIZE]),
+            memory_map: [MemoryMapEntry::empty(); MAX_MEMORY_ENTRIES],
+            memory_map_count: 0,
         }
     }
-    None
+}
+
+struct GlobalCache(UnsafeCell<BootCache>);
+
+unsafe impl Sync for GlobalCache {}
+
+static CACHE: GlobalCache = GlobalCache(UnsafeCell::new(BootCache::empty()));
+
+pub fn init(info_addr: u32) {
+    let boot_info = unsafe { &*(info_addr as *const Multiboot2BootInfo) };
+    let size = boot_info.total_size as usize;
+    let size = size.min(MULTIBOOT2_CACHE_SIZE);
+    let cache = unsafe { &mut *CACHE.0.get() };
+
+    unsafe {
+        copy_nonoverlapping(info_addr as *const u8, cache.blob.0.as_mut_ptr(), size);
+    }
+    cache.size = size;
+    cache.is_ready = true;
+
+    let boot_info = unsafe { &*addr_of!(cache.blob).cast::<Multiboot2BootInfo>() };
+
+    cache.memory_map_count = 0;
+    for info in boot_info.tags() {
+        if let Multiboot2Tag::MemoryMap(memory_map) = info.parse() {
+            for entry in memory_map.entries() {
+                if cache.memory_map_count >= MAX_MEMORY_ENTRIES {
+                    break;
+                }
+
+                cache.memory_map[cache.memory_map_count] = MemoryMapEntry {
+                    base_addr: entry.base_addr,
+                    length: entry.length,
+                    entry_type: entry.entry_type,
+                };
+                cache.memory_map_count += 1;
+            }
+        }
+    }
+}
+
+pub fn get_memory_map() -> &'static [MemoryMapEntry] {
+    let cache = unsafe { &*CACHE.0.get() };
+    &cache.memory_map[..cache.memory_map_count]
 }
 
 pub fn print() {
-    let info_addr = MULTIBOOT2_ADDR.load(Ordering::SeqCst);
-    let multiboot_info = unsafe { &*(info_addr as *const Multiboot2BootInfo) };
-    println!(
-        "total_size: {}, reserved: {}",
-        multiboot_info.total_size, multiboot_info.reserved
-    );
-    println!();
+    let cache = unsafe { &*CACHE.0.get() };
 
-    for info in multiboot_info.tags() {
-        let tag = info.parse();
-        println!("{tag}");
+    if cache.is_ready {
+        let boot_info = unsafe { &*addr_of!(cache.blob).cast::<Multiboot2BootInfo>() };
+
+        println!(
+            "total_size: {}, reserved: {}",
+            boot_info.total_size, boot_info.reserved
+        );
+        println!();
+        for info in boot_info.tags() {
+            let tag = info.parse();
+            println!("{tag}");
+        }
     }
 }
