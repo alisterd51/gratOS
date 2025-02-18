@@ -50,6 +50,7 @@ impl Shell {
         }
     }
 
+    // wait `for_each` in `const fn` <https://github.com/rust-lang/rust/issues/67792>
     fn input_line(&mut self, line: &Line) {
         self.command.iter_mut().enumerate().for_each(|(i, cmd)| {
             if i < line.len() {

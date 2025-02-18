@@ -19,15 +19,15 @@ impl Writer {
         }
     }
 
-    pub fn set_char(&mut self, c: &ScreenChar, col: usize, row: usize) {
+    pub const fn set_char(&mut self, c: &ScreenChar, col: usize, row: usize) {
         unsafe { (*self.buffer).chars[row][col] = *c };
     }
 
-    pub fn set_line(&mut self, line: &ScreenCharLine, row: usize) {
+    pub const fn set_line(&mut self, line: &ScreenCharLine, row: usize) {
         unsafe { (*self.buffer).chars[row] = *line };
     }
 
-    pub fn set_screen(&mut self, screen: &Screen) {
+    pub const fn set_screen(&mut self, screen: &Screen) {
         unsafe { (*self.buffer).chars = *screen };
     }
 }
