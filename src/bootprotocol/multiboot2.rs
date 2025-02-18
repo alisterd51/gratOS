@@ -1,4 +1,4 @@
-use crate::println;
+use crate::{bootprotocol::MemoryMapEntry, println};
 use core::{
     fmt,
     sync::atomic::{AtomicU32, Ordering},
@@ -417,6 +417,30 @@ impl fmt::Display for Multiboot2MemoryMap {
         }
 
         Ok(())
+    }
+}
+
+pub struct MemoryMapIter {
+    entries: &'static [Multiboot2MemoryMapEntry],
+    index: usize,
+}
+
+impl Iterator for MemoryMapIter {
+    type Item = MemoryMapEntry;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.entries.len() {
+            let entry = &self.entries[self.index];
+            self.index += 1;
+
+            Some(MemoryMapEntry {
+                base_addr: entry.base_addr,
+                length: entry.length,
+                entry_type: entry.entry_type,
+            })
+        } else {
+            None
+        }
     }
 }
 
@@ -923,9 +947,25 @@ pub fn init(info_addr: u32) {
     MULTIBOOT2_ADDR.store(info_addr, Ordering::SeqCst);
 }
 
+pub fn get_memory_map() -> Option<MemoryMapIter> {
+    let info_addr = MULTIBOOT2_ADDR.load(Ordering::SeqCst);
+    let multiboot_info = unsafe { &*(info_addr as *const Multiboot2BootInfo) };
+    for info in multiboot_info.tags() {
+        if let Multiboot2Tag::MemoryMap(memory_map) = info.parse() {
+            let entries: &'static [Multiboot2MemoryMapEntry] = unsafe {
+                core::slice::from_raw_parts(
+                    memory_map.entries().as_ptr(),
+                    memory_map.entries().len(),
+                )
+            };
+            return Some(MemoryMapIter { entries, index: 0 });
+        }
+    }
+    None
+}
+
 pub fn print() {
     let info_addr = MULTIBOOT2_ADDR.load(Ordering::SeqCst);
-
     let multiboot_info = unsafe { &*(info_addr as *const Multiboot2BootInfo) };
     println!(
         "total_size: {}, reserved: {}",
