@@ -1,5 +1,8 @@
-use crate::println;
-use core::sync::atomic::{AtomicU32, Ordering};
+use crate::{bootprotocol::MemoryMapEntry, println};
+use core::{
+    fmt,
+    sync::atomic::{AtomicU32, Ordering},
+};
 
 // https://www.gnu.org/software/grub/manual/multiboot/multiboot.html#Boot-information-format
 #[repr(C)]
@@ -11,7 +14,7 @@ struct MultibootInfo {
     cmdline: u32,            // (present if flags[2] is set)
     mods_count: u32,         // (present if flags[3] is set)
     mods_addr: u32,          // (present if flags[3] is set)
-    syms: u128,              // (present if flags[4] or flags[5] is set)
+    syms: [u32; 4],          // (present if flags[4] or flags[5] is set)
     mmap_length: u32,        // (present if flags[6] is set)
     mmap_addr: u32,          // (present if flags[6] is set)
     drives_length: u32,      // (present if flags[7] is set)
@@ -36,10 +39,69 @@ struct MultibootInfo {
     color_info_2: u16,       // (present if flags[12] is set)
 }
 
+#[repr(C, packed)]
+pub struct MultibootMemoryMapEntry {
+    pub size: u32,
+    pub base_addr: u64,
+    pub length: u64,
+    pub entry_type: u32,
+}
+
+impl fmt::Display for MultibootMemoryMapEntry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let size = self.size;
+        let base_addr = self.base_addr;
+        let length = self.length;
+        let entry_type = self.entry_type;
+
+        write!(
+            f,
+            "memory_map_entry: size: {size}, base_addr: {base_addr}, length: {length}, entry_type: {entry_type}"
+        )
+    }
+}
+
+pub struct MemoryMapIter {
+    current_addr: u32,
+    end_addr: u32,
+}
+
+impl Iterator for MemoryMapIter {
+    type Item = MemoryMapEntry;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.current_addr >= self.end_addr {
+            return None;
+        }
+        let entry_ptr = self.current_addr as *const MultibootMemoryMapEntry;
+        let raw_entry = unsafe { core::ptr::read_unaligned(entry_ptr) };
+        self.current_addr += raw_entry.size + 4;
+
+        Some(MemoryMapEntry {
+            base_addr: raw_entry.base_addr,
+            length: raw_entry.length,
+            entry_type: raw_entry.entry_type,
+        })
+    }
+}
+
 static MULTIBOOT_ADDR: AtomicU32 = AtomicU32::new(0);
 
 pub fn init(info_addr: u32) {
     MULTIBOOT_ADDR.store(info_addr, Ordering::SeqCst);
+}
+
+pub fn get_memory_map() -> Option<MemoryMapIter> {
+    let info_addr = MULTIBOOT_ADDR.load(Ordering::SeqCst);
+    let multiboot_info = unsafe { &*(info_addr as *const MultibootInfo) };
+    if multiboot_info.flags & (1 << 6) != 0 {
+        Some(MemoryMapIter {
+            current_addr: multiboot_info.mmap_addr,
+            end_addr: multiboot_info.mmap_addr + multiboot_info.mmap_length,
+        })
+    } else {
+        None
+    }
 }
 
 pub fn print() {
@@ -65,13 +127,18 @@ pub fn print() {
         );
     }
     if multiboot_info.flags & ((1 << 4) | (1 << 5)) != 0 {
-        println!("syms: {}", multiboot_info.syms);
+        println!("syms: {:?}", multiboot_info.syms);
     }
     if multiboot_info.flags & (1 << 6) != 0 {
         println!(
             "mmap_length: {}, mmap_addr: {}",
             multiboot_info.mmap_length, multiboot_info.mmap_addr
         );
+        if let Some(memory_map_iter) = get_memory_map() {
+            for memory_map_entry in memory_map_iter {
+                println!("{memory_map_entry}");
+            }
+        }
     }
     if multiboot_info.flags & (1 << 7) != 0 {
         println!(
