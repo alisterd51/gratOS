@@ -5,6 +5,7 @@ mod bootprotocol;
 mod driver;
 mod gdt;
 mod io;
+mod memory;
 mod mutex;
 
 use core::{arch::global_asm, panic::PanicInfo};
@@ -21,6 +22,7 @@ pub extern "C" fn kmain(magic: u32, info_addr: u32) -> ! {
     console::clear();
     gdt::init();
     bootprotocol::init(magic, info_addr);
+    memory::init();
 
     println!("{}42{}", console::FG_GREEN, console::FG_RESET);
 

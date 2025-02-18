@@ -11,7 +11,6 @@ pub mod multiboot2;
 
 // https://www.gnu.org/software/grub/manual/multiboot/multiboot.html#Boot-information-format
 // https://uefi.org/htmlspecs/ACPI_Spec_6_4_html/15_System_Address_Map_Interfaces/Sys_Address_Map_Interfaces.html
-#[allow(dead_code)]
 #[derive(PartialEq, Eq)]
 pub enum MemoryType {
     Memory,           // 1
@@ -50,7 +49,6 @@ impl MemoryMapEntry {
         }
     }
 
-    #[allow(dead_code)]
     pub const fn memory_type(&self) -> MemoryType {
         match self.entry_type {
             1 => MemoryType::Memory,
@@ -84,7 +82,6 @@ pub fn init(magic: u32, info_addr: u32) {
     }
 }
 
-#[allow(dead_code)]
 pub fn get_memory_map() -> Option<&'static [MemoryMapEntry]> {
     let magic = MAGIC.load(Ordering::SeqCst);
     match magic {

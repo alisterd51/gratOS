@@ -7,7 +7,7 @@ use super::{
     console::{self, NUMBER_OF_REGULAR_TTY},
     vga::{BUFFER_WIDTH, Line},
 };
-use crate::{bootprotocol, gdt, mutex::Mutex, print, println};
+use crate::{bootprotocol, gdt, memory, mutex::Mutex, print, println};
 
 const PS1: &str = "> ";
 
@@ -37,10 +37,11 @@ fn execute_command(line: &Line) {
         let command = parts.next().unwrap_or("");
         match command {
             "help" => println!(
-                "all commands:\n\thalt\n\tprint_gdt\n\tprint_multiboot\n\tprint_kernel_stack [bytes]\n\treboot\n\tshutdown\n\ttest_colors"
+                "all commands:\n\thalt\n\tprint_gdt\n\tprint_memory\n\tprint_multiboot\n\tprint_kernel_stack [bytes]\n\treboot\n\tshutdown\n\ttest_colors"
             ),
             "halt" => halt::halt(),
             "print_gdt" => gdt::print(),
+            "print_memory" => memory::print(),
             "print_multiboot" => bootprotocol::print(),
             "print_kernel_stack" => {
                 let bytes = parts
