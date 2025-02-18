@@ -34,6 +34,9 @@ iso: ${BUILDDIR}/${ISO}
 ${BUILDDIR}:
 	mkdir -p $@
 
+limine:
+	git clone https://github.com/limine-bootloader/limine.git --branch=v9.x-binary --depth=1
+
 target/target/${BUILD}/gratos: $(shell find src -type f -name '*.rs') $(shell find src -type f -name '*.s') Cargo.toml
 	${CARGO} build ${CARGOFLAGS.${BUILD}}
 	grub-file --is-${ARCH}-multiboot target/target/${BUILD}/gratos
@@ -44,8 +47,7 @@ ${BUILDDIR}/gratos.${ARCH}.grub.iso: target/target/${BUILD}/gratos
 	cp ${GRUBCFG} ${ISODIR}/boot/grub/grub.cfg
 	grub-mkrescue --compress=xz -o ${BUILDDIR}/${ISO} ${ISODIR}
 
-${BUILDDIR}/gratos.${ARCH}.limine.iso: target/target/${BUILD}/gratos
-	git clone https://github.com/limine-bootloader/limine.git --branch=v8.x-binary --depth=1
+${BUILDDIR}/gratos.${ARCH}.limine.iso: target/target/${BUILD}/gratos limine
 	make -C limine
 	mkdir -p ${ISODIR}/boot/limine
 	cp -v target/target/${BUILD}/gratos ${ISODIR}/boot/
