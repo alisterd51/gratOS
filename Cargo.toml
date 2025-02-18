@@ -1,6 +1,6 @@
 [package]
 name = "gratos"
-version = "0.2.5"
+version = "0.2.6"
 edition = "2024"
 
 [[bin]]
@@ -17,7 +17,12 @@ panic = "abort"
 [profile.release]
 panic = "abort"
 codegen-units = 1
-lto = "fat"
+lto = true
+strip = true
+opt-level = "s"
+
+[lints.rust]
+warnings = "deny"
 
 [lints.clippy]
 all = "deny"
