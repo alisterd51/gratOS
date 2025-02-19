@@ -35,77 +35,42 @@ pub const SCROLL_UP: &str = "\x1B[S";
 #[allow(dead_code)]
 pub const SCROLL_DOWN: &str = "\x1B[T";
 
-#[allow(dead_code)]
 pub const RESET: &str = "\x1B[0m";
 
-#[allow(dead_code)]
 pub const FG_BLACK: &str = "\x1B[30m";
-#[allow(dead_code)]
 pub const FG_RED: &str = "\x1B[31m";
-#[allow(dead_code)]
 pub const FG_GREEN: &str = "\x1B[32m";
-#[allow(dead_code)]
 pub const FG_YELLOW: &str = "\x1B[33m";
-#[allow(dead_code)]
 pub const FG_BLUE: &str = "\x1B[34m";
-#[allow(dead_code)]
 pub const FG_MAGENTA: &str = "\x1B[35m";
-#[allow(dead_code)]
 pub const FG_CYAN: &str = "\x1B[36m";
-#[allow(dead_code)]
 pub const FG_WHITE: &str = "\x1B[37m";
-#[allow(dead_code)]
 pub const FG_BRIGHT_BLACK: &str = "\x1B[90m";
-#[allow(dead_code)]
 pub const FG_BRIGHT_RED: &str = "\x1B[91m";
-#[allow(dead_code)]
 pub const FG_BRIGHT_GREEN: &str = "\x1B[92m";
-#[allow(dead_code)]
 pub const FG_BRIGHT_YELLOW: &str = "\x1B[93m";
-#[allow(dead_code)]
 pub const FG_BRIGHT_BLUE: &str = "\x1B[94m";
-#[allow(dead_code)]
 pub const FG_BRIGHT_MAGENTA: &str = "\x1B[95m";
-#[allow(dead_code)]
 pub const FG_BRIGHT_CYAN: &str = "\x1B[96m";
-#[allow(dead_code)]
 pub const FG_BRIGHT_WHITE: &str = "\x1B[97m";
-#[allow(dead_code)]
 pub const FG_RESET: &str = "\x1B[39m";
 
-#[allow(dead_code)]
 pub const BG_BLACK: &str = "\x1B[40m";
-#[allow(dead_code)]
 pub const BG_RED: &str = "\x1B[41m";
-#[allow(dead_code)]
 pub const BG_GREEN: &str = "\x1B[42m";
-#[allow(dead_code)]
 pub const BG_YELLOW: &str = "\x1B[43m";
-#[allow(dead_code)]
 pub const BG_BLUE: &str = "\x1B[44m";
-#[allow(dead_code)]
 pub const BG_MAGENTA: &str = "\x1B[45m";
-#[allow(dead_code)]
 pub const BG_CYAN: &str = "\x1B[46m";
-#[allow(dead_code)]
 pub const BG_WHITE: &str = "\x1B[47m";
-#[allow(dead_code)]
 pub const BG_BRIGHT_BLACK: &str = "\x1B[100m";
-#[allow(dead_code)]
 pub const BG_BRIGHT_RED: &str = "\x1B[101m";
-#[allow(dead_code)]
 pub const BG_BRIGHT_GREEN: &str = "\x1B[102m";
-#[allow(dead_code)]
 pub const BG_BRIGHT_YELLOW: &str = "\x1B[103m";
-#[allow(dead_code)]
 pub const BG_BRIGHT_BLUE: &str = "\x1B[104m";
-#[allow(dead_code)]
 pub const BG_BRIGHT_MAGENTA: &str = "\x1B[105m";
-#[allow(dead_code)]
 pub const BG_BRIGHT_CYAN: &str = "\x1B[106m";
-#[allow(dead_code)]
 pub const BG_BRIGHT_WHITE: &str = "\x1B[107m";
-#[allow(dead_code)]
 pub const BG_RESET: &str = "\x1B[49m";
 
 #[derive(Clone, Copy)]
@@ -493,7 +458,6 @@ pub fn get_tty_id() -> usize {
     WRITER.lock().get_tty_id()
 }
 
-#[cfg(debug_assertions)]
 pub fn test_colors() {
     const FGS: [&str; 16] = [
         FG_BLACK,
