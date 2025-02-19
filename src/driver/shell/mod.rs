@@ -1,12 +1,11 @@
 mod halt;
-mod hello;
 mod print_gdt;
 mod print_kernel_stack;
 mod reboot;
 mod shutdown;
 
 use super::{
-    console::NUMBER_OF_REGULAR_TTY,
+    console::{self, NUMBER_OF_REGULAR_TTY},
     vga::{BUFFER_WIDTH, Line},
 };
 use crate::{mutex::Mutex, print, println};
@@ -62,18 +61,24 @@ impl Shell {
     }
 
     fn process(&self) {
-        if compare_command(b"hello", &self.command) {
-            hello::hello();
+        if compare_command(b"help", &self.command) {
+            println!(
+                "all commands:\n\thalt\n\tprint_gdt\n\tprint_kernel_stack\n\tprint_kernel_stack_test\n\treboot\n\tshutdown\n\ttest_colors"
+            );
         } else if compare_command(b"halt", &self.command) {
             halt::halt();
         } else if compare_command(b"print_gdt", &self.command) {
             print_gdt::print_gdt();
         } else if compare_command(b"print_kernel_stack", &self.command) {
             print_kernel_stack::print_kernel_stack(0);
+        } else if compare_command(b"print_kernel_stack_test", &self.command) {
+            print_kernel_stack::test();
         } else if compare_command(b"reboot", &self.command) {
             reboot::reboot();
         } else if compare_command(b"shutdown", &self.command) {
             shutdown::qemu();
+        } else if compare_command(b"test_colors", &self.command) {
+            console::test_colors();
         } else {
             println!("command not found");
         }

@@ -1,14 +1,12 @@
 use crate::{print, println};
 use core::arch::asm;
 
-#[cfg(debug_assertions)]
-#[allow(dead_code)]
 pub fn test() {
     #[allow(unused_variables)]
     let alphabet = [
-        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+        b'A', b'B', b'C', b'D', b'E', b'F', b'G', b'H', b'I', b'J', b'K', b'L', b'M', b'N', b'O',
     ];
-    print_kernel_stack(600);
+    print_kernel_stack(6000);
 }
 
 fn is_printable(c: u8) -> bool {

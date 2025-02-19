@@ -21,9 +21,6 @@ pub extern "C" fn kmain() -> ! {
 
     console::clear();
 
-    #[cfg(debug_assertions)]
-    console::test_colors();
-
     println!("{}42{}", console::FG_GREEN, console::FG_RESET);
 
     let mut keyboard = keyboard::ps2::Keyboard::new();
