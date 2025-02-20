@@ -446,20 +446,14 @@ pub fn _print(args: fmt::Arguments) {
 
 static WRITER: Mutex<Console> = Mutex::new(Console::new());
 
-#[allow(clippy::inline_always)]
-#[inline(always)]
 pub fn clear() {
     WRITER.lock().clear();
 }
 
-#[allow(clippy::inline_always)]
-#[inline(always)]
 pub fn change_tty_id(id: usize) {
     WRITER.lock().change_tty_id(id);
 }
 
-#[allow(clippy::inline_always)]
-#[inline(always)]
 pub fn get_tty_id() -> usize {
     WRITER.lock().get_tty_id()
 }
