@@ -101,7 +101,11 @@ impl History {
         if self.descriptors[self.tty_id].begin == self.descriptors[self.tty_id].current {
             Err(())
         } else {
-            self.descriptors[self.tty_id].current -= 1;
+            if self.descriptors[self.tty_id].current == 0 {
+                self.descriptors[self.tty_id].current = HISTORY_BUFFER_HEIGHT - 1;
+            } else {
+                self.descriptors[self.tty_id].current -= 1;
+            }
             Ok(())
         }
     }
@@ -110,7 +114,8 @@ impl History {
         if self.descriptors[self.tty_id].current == self.descriptors[self.tty_id].end {
             Err(())
         } else {
-            self.descriptors[self.tty_id].current += 1;
+            self.descriptors[self.tty_id].current =
+                (self.descriptors[self.tty_id].current + 1) % HISTORY_BUFFER_HEIGHT;
             Ok(())
         }
     }
