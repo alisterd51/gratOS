@@ -245,6 +245,9 @@ impl Console {
     }
 
     fn backspace(&mut self) {
+        if self.history.end_line().is_ok() {
+            self.update_screen();
+        }
         if self.descriptors[self.id].column_position > shell::ps1().len() {
             self.descriptors[self.id].column_position -= 1;
             self.write_ascii(b' ');
@@ -253,6 +256,9 @@ impl Console {
     }
 
     fn delete(&mut self) {
+        if self.history.end_line().is_ok() {
+            self.update_screen();
+        }
         self.write_ascii(b' ');
     }
 
