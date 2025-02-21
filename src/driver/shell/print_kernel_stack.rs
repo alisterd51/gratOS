@@ -9,6 +9,7 @@ pub fn test() {
     print_kernel_stack(6000);
 }
 
+// wait `contains` in `const fn` <https://github.com/rust-lang/rust/issues/67792>
 fn is_printable(c: u8) -> bool {
     (b' '..=b'~').contains(&c)
 }

@@ -41,7 +41,7 @@ impl History {
         }
     }
 
-    pub fn set_char(&mut self, c: &ScreenChar, col: usize, row: usize) {
+    pub const fn set_char(&mut self, c: &ScreenChar, col: usize, row: usize) {
         if col < BUFFER_WIDTH && row < BUFFER_HEIGHT {
             unsafe {
                 (*self.chars)[self.tty_id]
@@ -51,7 +51,7 @@ impl History {
         }
     }
 
-    pub fn set_line(&mut self, line: &ScreenCharLine, row: usize) {
+    pub const fn set_line(&mut self, line: &ScreenCharLine, row: usize) {
         unsafe {
             (*self.chars)[self.tty_id]
                 [(self.descriptors[self.tty_id].current + row) % HISTORY_BUFFER_HEIGHT] = *line;
@@ -60,7 +60,7 @@ impl History {
 
     // TODO: remove if useless
     #[allow(dead_code)]
-    pub fn get_char(&self, x: usize, y: usize) -> Result<ScreenChar, ()> {
+    pub const fn get_char(&self, x: usize, y: usize) -> Result<ScreenChar, ()> {
         if x < BUFFER_WIDTH && y < BUFFER_HEIGHT {
             Ok(unsafe {
                 (*self.chars)[self.tty_id]
@@ -73,7 +73,7 @@ impl History {
 
     // TODO: remove if useless
     #[allow(dead_code)]
-    pub fn get_line(&self, y: usize) -> Result<ScreenCharLine, ()> {
+    pub const fn get_line(&self, y: usize) -> Result<ScreenCharLine, ()> {
         if y < BUFFER_HEIGHT {
             Ok(unsafe {
                 (*self.chars)[self.tty_id]
@@ -84,6 +84,7 @@ impl History {
         }
     }
 
+    // wait `for_each` in `const fn` <https://github.com/rust-lang/rust/issues/67792>
     pub fn get_screen(&self) -> Screen {
         let mut screen = [[ScreenChar {
             ascii_character: b' ',
@@ -140,7 +141,7 @@ impl History {
         if ok { Ok(()) } else { Err(()) }
     }
 
-    pub fn new_line(&mut self) {
+    pub const fn new_line(&mut self) {
         self.descriptors[self.tty_id].end =
             (self.descriptors[self.tty_id].end + 1) % HISTORY_BUFFER_HEIGHT;
         self.descriptors[self.tty_id].current = self.descriptors[self.tty_id].end;

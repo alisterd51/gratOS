@@ -4,6 +4,7 @@
 mod driver;
 mod gdt;
 mod io;
+mod memory;
 mod mutex;
 
 use core::{arch::global_asm, panic::PanicInfo};
@@ -18,6 +19,8 @@ fn panic(info: &PanicInfo) -> ! {
 #[unsafe(no_mangle)]
 pub extern "C" fn kmain() -> ! {
     gdt::init();
+
+    memory::init();
 
     console::clear();
 
