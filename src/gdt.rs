@@ -48,7 +48,7 @@ pub fn init() {
 
         asm!(
             "lgdt [{}]",
-            in(reg) &gdtr,
+            in(reg) &raw const gdtr,
             options(nostack, preserves_flags)
         );
 
