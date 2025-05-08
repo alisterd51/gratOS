@@ -141,7 +141,7 @@ fn print_limit(limit: u16) {
 pub fn print_gdt() {
     let mut gdt = [0; 2];
     unsafe {
-        asm!("sgdt [{}]", in(reg) &mut gdt);
+        asm!("sgdt [{}]", in(reg) &raw mut gdt);
     }
     let gdt_base = gdt[1];
     let gdt_limit = gdt[0];
