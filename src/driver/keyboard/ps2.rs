@@ -231,21 +231,21 @@ impl Keyboard {
     }
 
     const fn scancode_to_keymapvalue(&self, scancode: u16) -> Option<KeymapValue> {
-        if let Some(scan_code_value) = self.scan_code_set.from(scancode) {
-            if let Some(keymap_set) = self.keymap[scan_code_value as usize] {
-                if self.key_modifier.control() {
-                    return Some(keymap_set.ctrl);
-                } else if self.key_modifier.alt() && self.key_modifier.shift() {
-                    return Some(keymap_set.alt_shift);
-                } else if self.key_modifier.alt {
-                    return Some(keymap_set.alt1);
-                } else if self.key_modifier.alt_gr {
-                    return Some(keymap_set.alt2);
-                } else if self.key_modifier.shift() {
-                    return Some(keymap_set.shift);
-                }
-                return Some(keymap_set.not_shift);
+        if let Some(scan_code_value) = self.scan_code_set.from(scancode)
+            && let Some(keymap_set) = self.keymap[scan_code_value as usize]
+        {
+            if self.key_modifier.control() {
+                return Some(keymap_set.ctrl);
+            } else if self.key_modifier.alt() && self.key_modifier.shift() {
+                return Some(keymap_set.alt_shift);
+            } else if self.key_modifier.alt {
+                return Some(keymap_set.alt1);
+            } else if self.key_modifier.alt_gr {
+                return Some(keymap_set.alt2);
+            } else if self.key_modifier.shift() {
+                return Some(keymap_set.shift);
             }
+            return Some(keymap_set.not_shift);
         }
         None
     }
