@@ -273,7 +273,7 @@ impl Console {
         self.update_cursor();
     }
 
-    fn write_ascii(&mut self, byte: u8) {
+    const fn write_ascii(&mut self, byte: u8) {
         let row = self.descriptors[self.id].row_position;
         let col = self.descriptors[self.id].column_position;
         let color_code = self.descriptors[self.id].color_code;
@@ -330,7 +330,7 @@ impl Console {
         self.update_screen();
     }
 
-    fn clear_row(&mut self, row: usize) {
+    const fn clear_row(&mut self, row: usize) {
         let blank = ScreenChar {
             ascii_character: b' ',
             color_code: self.descriptors[self.id].color_code,
