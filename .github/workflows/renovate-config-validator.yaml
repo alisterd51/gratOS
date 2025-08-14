@@ -18,4 +18,4 @@ jobs:
       - name: run renovate-config-validator
         run: |
           jq . renovate.json
-          npx --yes renovate@latest -- renovate-config-validator --strict
+          npx --yes --package renovate@latest -- renovate-config-validator --strict
