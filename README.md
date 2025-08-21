@@ -20,7 +20,7 @@ make run
 
 ```bash
 wget https://github.com/alisterd51/gratOS/releases/download/nightly/gratos.x86.grub.iso
-qemu-system-x86_64 -cdrom gratos.x86.grub.iso
+qemu-system-i386 -cdrom gratos.x86.grub.iso
 ```
 
 ## TODO
