@@ -35,7 +35,7 @@ ${BUILDDIR}:
 	mkdir -p $@
 
 limine:
-	git clone https://github.com/limine-bootloader/limine.git --branch=v9.x-binary --depth=1
+	git clone https://codeberg.org/Limine/Limine.git --branch=v9.x-binary --depth=1 limine
 
 target/target/${BUILD}/gratos: $(shell find src -type f -name '*.rs') $(shell find src -type f -name '*.s') Cargo.toml
 	${CARGO} build ${CARGOFLAGS.${BUILD}}
