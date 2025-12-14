@@ -155,6 +155,6 @@ pub fn print_gdt() {
         let gdt_entry = unsafe { *gdt_ptr };
         let segment = parse_segment_descriptor(gdt_entry);
         print_segment(&segment, i);
-        gdt_ptr = unsafe { gdt_ptr.offset(1) };
+        gdt_ptr = unsafe { gdt_ptr.add(1) };
     }
 }
