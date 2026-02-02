@@ -4,6 +4,7 @@ build-std = [
     "compiler_builtins"
 ]
 build-std-features = ["compiler-builtins-mem"]
+json-target-spec = true
 
 [build]
 target = "arch/x86/target.json"
