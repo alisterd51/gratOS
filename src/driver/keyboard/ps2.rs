@@ -94,36 +94,23 @@ impl Keyboard {
         }
     }
 
-    // TODO: refactor thi function
-    #[allow(clippy::cognitive_complexity)]
-    #[allow(clippy::too_many_lines)]
     fn interpret_keymapvalue(&mut self, keymap_value: KeymapValue, pressed: bool) {
         match keymap_value {
-            KeymapValue::Ascii(c) | KeymapValue::Lowercase(c) | KeymapValue::Alt(c) => {
-                if pressed {
-                    print!("{c}");
-                }
+            KeymapValue::Ascii(c) | KeymapValue::Lowercase(c) | KeymapValue::Alt(c) if pressed => {
+                print!("{c}");
             }
-            KeymapValue::Control(c) | KeymapValue::ControlAlt(c) => {
-                if pressed {
-                    let c = ((c as u8) & 0x3F) as char;
-                    print!("{c}");
-                }
+            KeymapValue::Control(c) | KeymapValue::ControlAlt(c) if pressed => {
+                let c = ((c as u8) & 0x3F) as char;
+                print!("{c}");
             }
-            KeymapValue::CapsLock => {
-                if pressed {
-                    self.key_modifier.caps_lock = !self.key_modifier.caps_lock;
-                }
+            KeymapValue::CapsLock if pressed => {
+                self.key_modifier.caps_lock = !self.key_modifier.caps_lock;
             }
-            KeymapValue::NumberLock => {
-                if pressed {
-                    self.key_modifier.num_lock = !self.key_modifier.num_lock;
-                }
+            KeymapValue::NumberLock if pressed => {
+                self.key_modifier.num_lock = !self.key_modifier.num_lock;
             }
-            KeymapValue::ScrollLock => {
-                if pressed {
-                    self.key_modifier.scroll_lock = !self.key_modifier.scroll_lock;
-                }
+            KeymapValue::ScrollLock if pressed => {
+                self.key_modifier.scroll_lock = !self.key_modifier.scroll_lock;
             }
             KeymapValue::LeftControl => self.key_modifier.left_control = pressed,
             KeymapValue::LeftShift => self.key_modifier.left_shift = pressed,
@@ -131,100 +118,66 @@ impl Keyboard {
             KeymapValue::RightControl => self.key_modifier.right_control = pressed,
             KeymapValue::RightShift => self.key_modifier.right_shift = pressed,
             KeymapValue::RightAlt => self.key_modifier.alt_gr = pressed,
-            KeymapValue::Delete => {
-                if pressed {
-                    print!("{}", 0x7Fu8 as char);
-                }
+            KeymapValue::Delete if pressed => {
+                print!("{}", 0x7Fu8 as char);
             }
-            KeymapValue::Right | KeymapValue::AltRight | KeymapValue::ControlRight => {
-                if pressed {
-                    print!("{CURSOR_RIGHT}");
-                }
+            KeymapValue::Right | KeymapValue::AltRight | KeymapValue::ControlRight if pressed => {
+                print!("{CURSOR_RIGHT}");
             }
-            KeymapValue::Left | KeymapValue::AltLeft | KeymapValue::ControlLeft => {
-                if pressed {
-                    print!("{CURSOR_LEFT}");
-                }
+            KeymapValue::Left | KeymapValue::AltLeft | KeymapValue::ControlLeft if pressed => {
+                print!("{CURSOR_LEFT}");
             }
-            KeymapValue::Down | KeymapValue::AltDown | KeymapValue::ControlDown => {
-                if pressed {
-                    print!("{CURSOR_DOWN}");
-                }
+            KeymapValue::Down | KeymapValue::AltDown | KeymapValue::ControlDown if pressed => {
+                print!("{CURSOR_DOWN}");
             }
-            KeymapValue::Up | KeymapValue::AltUp | KeymapValue::ControlUp => {
-                if pressed {
-                    print!("{CURSOR_UP}");
-                }
+            KeymapValue::Up | KeymapValue::AltUp | KeymapValue::ControlUp if pressed => {
+                print!("{CURSOR_UP}");
             }
-            KeymapValue::PageUp | KeymapValue::AltPageUp | KeymapValue::ControlPageUp => {
-                if pressed {
-                    print!("{SCROLL_UP}");
-                }
+            KeymapValue::PageUp | KeymapValue::AltPageUp | KeymapValue::ControlPageUp
+                if pressed =>
+            {
+                print!("{SCROLL_UP}");
             }
-            KeymapValue::PageDown | KeymapValue::AltPageDown | KeymapValue::ControlPageDown => {
-                if pressed {
-                    print!("{SCROLL_DOWN}");
-                }
+            KeymapValue::PageDown | KeymapValue::AltPageDown | KeymapValue::ControlPageDown
+                if pressed =>
+            {
+                print!("{SCROLL_DOWN}");
             }
-            KeymapValue::F1 => {
-                if pressed {
-                    console::change_tty_id(0);
-                }
+            KeymapValue::F1 if pressed => {
+                console::change_tty_id(0);
             }
-            KeymapValue::F2 => {
-                if pressed {
-                    console::change_tty_id(1);
-                }
+            KeymapValue::F2 if pressed => {
+                console::change_tty_id(1);
             }
-            KeymapValue::F3 => {
-                if pressed {
-                    console::change_tty_id(2);
-                }
+            KeymapValue::F3 if pressed => {
+                console::change_tty_id(2);
             }
-            KeymapValue::F4 => {
-                if pressed {
-                    console::change_tty_id(3);
-                }
+            KeymapValue::F4 if pressed => {
+                console::change_tty_id(3);
             }
-            KeymapValue::F5 => {
-                if pressed {
-                    console::change_tty_id(4);
-                }
+            KeymapValue::F5 if pressed => {
+                console::change_tty_id(4);
             }
-            KeymapValue::F6 => {
-                if pressed {
-                    console::change_tty_id(5);
-                }
+            KeymapValue::F6 if pressed => {
+                console::change_tty_id(5);
             }
-            KeymapValue::F7 => {
-                if pressed {
-                    console::change_tty_id(6);
-                }
+            KeymapValue::F7 if pressed => {
+                console::change_tty_id(6);
             }
-            KeymapValue::F8 => {
-                if pressed {
-                    console::change_tty_id(7);
-                }
+            KeymapValue::F8 if pressed => {
+                console::change_tty_id(7);
             }
-            KeymapValue::F9 => {
-                if pressed {
-                    console::change_tty_id(8);
-                }
+            KeymapValue::F9 if pressed => {
+                console::change_tty_id(8);
             }
-            KeymapValue::F10 => {
-                if pressed {
-                    console::change_tty_id(9);
-                }
+            KeymapValue::F10 if pressed => {
+                console::change_tty_id(9);
             }
-            KeymapValue::F11 => {
-                if pressed {
-                    console::change_tty_id(10);
-                }
+            KeymapValue::F11 if pressed => {
+                console::change_tty_id(10);
             }
-            KeymapValue::F12 => {
-                if pressed {
-                    console::change_tty_id(11);
-                }
+            KeymapValue::F12 if pressed => {
+                console::change_tty_id(11);
             }
             _ => {}
         }
