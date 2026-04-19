@@ -1,67 +1,50 @@
 use crate::{print, println};
-use core::arch::asm;
+use core::{arch::asm, slice};
 
 pub fn test() {
     #[allow(unused_variables)]
-    let alphabet = [
-        b'A', b'B', b'C', b'D', b'E', b'F', b'G', b'H', b'I', b'J', b'K', b'L', b'M', b'N', b'O',
-    ];
+    let alphabet = *b"ABCDEFGHIJKLMNO";
     print_kernel_stack(6000);
 }
 
-fn is_printable(c: u8) -> bool {
-    (b' '..=b'~').contains(&c)
+const fn is_printable(c: u8) -> bool {
+    matches!(c, b' '..=b'~')
 }
 
-fn print_hex(stack: &[u8; 16], len: usize) {
-    (0..16).for_each(|i| {
-        if i < len {
-            print!("{:02x} ", stack[i]);
+fn print_hex(data: &[u8]) {
+    for &byte in data {
+        print!("{:02x} ", byte);
+    }
+    let padding = 16usize.saturating_sub(data.len());
+    for _ in 0..padding {
+        print!("   ");
+    }
+}
+
+fn print_ascii(data: &[u8]) {
+    for &byte in data {
+        let c = if is_printable(byte) {
+            byte as char
         } else {
-            print!("   ");
-        }
-    });
-}
-
-fn print_ascii(stack: &[u8; 16], len: usize) {
-    stack[..len].iter().for_each(|&byte| {
-        print!(
-            "{}",
-            if is_printable(byte) {
-                byte as char
-            } else {
-                '.'
-            }
-        );
-    });
+            '.'
+        };
+        print!("{c}");
+    }
 }
 
 #[allow(clippy::cast_possible_truncation)]
 pub fn print_kernel_stack(bytes: u32) {
-    let mut stack_pointer: u32;
+    let stack_pointer: u32;
     unsafe {
         asm!("mov {}, esp", out(reg) stack_pointer);
     }
-
-    let mut stack_pointer = stack_pointer as *const u8;
-    let bytes = if bytes == 0 { 128 } else { bytes };
-    let mut remaining = bytes;
-
-    while remaining > 0 {
-        let count = if remaining >= 16 {
-            16
-        } else {
-            remaining as usize
-        };
-        let mut line = [0u8; 16];
-        line[..count].iter_mut().enumerate().for_each(|(i, byte)| {
-            *byte = unsafe { *stack_pointer.add(i) };
-        });
-        print!("{:08x}  ", stack_pointer as u32);
-        print_hex(&line, count);
-        print_ascii(&line, count);
+    let len = if bytes == 0 { 128 } else { bytes as usize };
+    let stack_slice = unsafe { slice::from_raw_parts(stack_pointer as *const u8, len) };
+    for (i, chunk) in stack_slice.chunks(16).enumerate() {
+        let current_addr = stack_pointer + (i * 16) as u32;
+        print!("{:08x}  ", current_addr);
+        print_hex(chunk);
+        print_ascii(chunk);
         println!();
-        stack_pointer = unsafe { stack_pointer.add(count) };
-        remaining -= count as u32;
     }
 }
