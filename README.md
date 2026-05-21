@@ -113,3 +113,4 @@ qemu-system-i386 -cdrom gratos.x86.grub.iso
     - [ ] try to implement `memory` `dumping` and `debug` in the last "mini-shell" subject
 - [x] Other:
   - [x] add CI to build and serve an iso of gratOS
+  - [x] add multiboot/multiboot2 helpers

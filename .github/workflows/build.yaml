@@ -21,11 +21,11 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: cargo fix
         run: |
-          cargo fix
+          cargo fix --all-features
           git diff --exit-code
       - name: cargo fix edition
         run: |
-          cargo fix --edition
+          cargo fix --edition --all-features
           git diff --exit-code
 
   clippy:
@@ -34,10 +34,10 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: cargo clippy
         run: |
-          cargo clippy
+          cargo clippy --all-features
       - name: cargo clippy --release
         run: |
-          cargo clippy --release
+          cargo clippy --release --all-features
 
   build:
     runs-on: ubuntu-latest
@@ -47,9 +47,12 @@ jobs:
         build:
           - debug
           - release
+        bootprotocol:
+          - multiboot
+          - multiboot2
     container: ghcr.io/alisterd51/cross-toolchain:nightly
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      - name: Build ${{ matrix.build }}
+      - name: Build ${{ matrix.build }}, ${{ matrix.bootprotocol }}
         run: |
-          make all BUILD=${{ matrix.build }}
+          make all BUILD=${{ matrix.build }} BOOTPROTOCOL=${{ matrix.bootprotocol }}
