@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 
+mod bootprotocol;
 mod driver;
 mod gdt;
 mod io;
@@ -16,9 +17,9 @@ fn panic(info: &PanicInfo) -> ! {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn kmain() -> ! {
+pub extern "C" fn kmain(magic: u32, info_addr: u32) -> ! {
+    bootprotocol::init(magic, info_addr);
     gdt::init();
-
     console::clear();
 
     println!("{}42{}", console::FG_GREEN, console::FG_RESET);
@@ -33,4 +34,8 @@ pub extern "C" fn kmain() -> ! {
     }
 }
 
+#[cfg(feature = "multiboot")]
+global_asm!(include_str!("multiboot.s"), options(att_syntax));
+#[cfg(feature = "multiboot2")]
+global_asm!(include_str!("multiboot2.s"), options(att_syntax));
 global_asm!(include_str!("start.s"), options(att_syntax));

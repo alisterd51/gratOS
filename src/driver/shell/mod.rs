@@ -8,7 +8,7 @@ use super::{
     console::{self, NUMBER_OF_REGULAR_TTY},
     vga::{BUFFER_WIDTH, Line},
 };
-use crate::{mutex::Mutex, print, println};
+use crate::{bootprotocol, mutex::Mutex, print, println};
 
 const PS1: &str = "> ";
 
@@ -63,12 +63,14 @@ impl Shell {
     fn process(&self) {
         if compare_command(b"help", &self.command) {
             println!(
-                "all commands:\n\thalt\n\tprint_gdt\n\tprint_kernel_stack\n\tprint_kernel_stack_test\n\treboot\n\tshutdown\n\ttest_colors"
+                "all commands:\n\thalt\n\tprint_gdt\n\tprint_multiboot\n\tprint_kernel_stack\n\tprint_kernel_stack_test\n\treboot\n\tshutdown\n\ttest_colors"
             );
         } else if compare_command(b"halt", &self.command) {
             halt::halt();
         } else if compare_command(b"print_gdt", &self.command) {
             print_gdt::print_gdt();
+        } else if compare_command(b"print_multiboot", &self.command) {
+            bootprotocol::print();
         } else if compare_command(b"print_kernel_stack", &self.command) {
             print_kernel_stack::print_kernel_stack(0);
         } else if compare_command(b"print_kernel_stack_test", &self.command) {
