@@ -18,8 +18,8 @@ fn panic(info: &PanicInfo) -> ! {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn kmain(magic: u32, info_addr: u32) -> ! {
-    bootprotocol::init(magic, info_addr);
     gdt::init();
+    bootprotocol::init(magic, info_addr);
     console::clear();
 
     println!("{}42{}", console::FG_GREEN, console::FG_RESET);
