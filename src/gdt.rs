@@ -99,14 +99,13 @@ pub fn init() {
         );
 
         asm!(
-            "mov ax, {selector}",
-            "mov ds, ax",
-            "mov es, ax",
-            "mov fs, ax",
-            "mov gs, ax",
-            "mov ss, ax",
-            options(nostack),
-            selector = const KERNEL_DATA_SEGMENT_SELECTOR
+            "mov ds, {0:x}",
+            "mov es, {0:x}",
+            "mov fs, {0:x}",
+            "mov gs, {0:x}",
+            "mov ss, {0:x}",
+            in(reg) KERNEL_DATA_SEGMENT_SELECTOR,
+            options(nostack, preserves_flags)
         );
 
         asm!(
@@ -117,6 +116,7 @@ pub fn init() {
             "2:",
             selector = const KERNEL_CODE_SEGMENT_SELECTOR,
             tmp = out(reg) _,
+            options(nostack, preserves_flags)
         );
     }
 }
