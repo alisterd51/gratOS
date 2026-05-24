@@ -1,11 +1,26 @@
 use super::{DEFAULT_COLOR_CODE, HISTORY_BUFFER_HEIGHT, NUMBER_OF_REGULAR_TTY};
-use crate::driver::vga::{BUFFER_HEIGHT, BUFFER_WIDTH, Screen, ScreenChar, ScreenCharLine};
+use crate::{
+    driver::vga::{BUFFER_HEIGHT, BUFFER_WIDTH, Screen, ScreenChar, ScreenCharLine},
+    mutex::Mutex,
+};
 
-static mut BUFFER: *mut [[ScreenCharLine; HISTORY_BUFFER_HEIGHT]; NUMBER_OF_REGULAR_TTY] =
-    &mut [[[ScreenChar {
-        ascii_character: b' ',
-        color_code: DEFAULT_COLOR_CODE,
-    }; BUFFER_WIDTH]; HISTORY_BUFFER_HEIGHT]; NUMBER_OF_REGULAR_TTY];
+struct HistoryData {
+    chars: [[ScreenCharLine; HISTORY_BUFFER_HEIGHT]; NUMBER_OF_REGULAR_TTY],
+}
+
+impl HistoryData {
+    #[allow(clippy::large_stack_frames, clippy::large_stack_arrays)]
+    const fn new() -> Self {
+        Self {
+            chars: [[[ScreenChar {
+                ascii_character: b' ',
+                color_code: DEFAULT_COLOR_CODE,
+            }; BUFFER_WIDTH]; HISTORY_BUFFER_HEIGHT]; NUMBER_OF_REGULAR_TTY],
+        }
+    }
+}
+
+static HISTORY_BUFFER: Mutex<HistoryData> = Mutex::new(HistoryData::new());
 
 #[derive(Clone, Copy)]
 struct HistoryDescriptor {
@@ -27,7 +42,6 @@ impl HistoryDescriptor {
 pub struct History {
     tty_id: usize,
     descriptors: [HistoryDescriptor; NUMBER_OF_REGULAR_TTY],
-    chars: *mut [[ScreenCharLine; HISTORY_BUFFER_HEIGHT]; NUMBER_OF_REGULAR_TTY],
 }
 
 unsafe impl Send for History {}
@@ -37,35 +51,30 @@ impl History {
         Self {
             tty_id: 0,
             descriptors: [HistoryDescriptor::new(); NUMBER_OF_REGULAR_TTY],
-            chars: unsafe { BUFFER },
         }
     }
 
-    pub const fn set_char(&mut self, c: &ScreenChar, col: usize, row: usize) {
+    pub fn set_char(&self, c: ScreenChar, col: usize, row: usize) {
+        let mut buffer = HISTORY_BUFFER.lock();
         if col < BUFFER_WIDTH && row < BUFFER_HEIGHT {
-            unsafe {
-                (*self.chars)[self.tty_id]
-                    [(self.descriptors[self.tty_id].current + row) % HISTORY_BUFFER_HEIGHT][col] =
-                    *c;
-            }
+            buffer.chars[self.tty_id]
+                [(self.descriptors[self.tty_id].current + row) % HISTORY_BUFFER_HEIGHT][col] = c;
         }
     }
 
-    pub const fn set_line(&mut self, line: &ScreenCharLine, row: usize) {
-        unsafe {
-            (*self.chars)[self.tty_id]
-                [(self.descriptors[self.tty_id].current + row) % HISTORY_BUFFER_HEIGHT] = *line;
-        }
+    pub fn set_line(&self, line: &ScreenCharLine, row: usize) {
+        let mut buffer = HISTORY_BUFFER.lock();
+        buffer.chars[self.tty_id]
+            [(self.descriptors[self.tty_id].current + row) % HISTORY_BUFFER_HEIGHT] = *line;
     }
 
     // TODO: remove if useless
     #[allow(dead_code)]
-    pub const fn get_char(&self, x: usize, y: usize) -> Result<ScreenChar, ()> {
+    pub fn get_char(&self, x: usize, y: usize) -> Result<ScreenChar, ()> {
+        let buffer = HISTORY_BUFFER.lock();
         if x < BUFFER_WIDTH && y < BUFFER_HEIGHT {
-            Ok(unsafe {
-                (*self.chars)[self.tty_id]
-                    [(self.descriptors[self.tty_id].current + y) % HISTORY_BUFFER_HEIGHT][x]
-            })
+            Ok(buffer.chars[self.tty_id]
+                [(self.descriptors[self.tty_id].current + y) % HISTORY_BUFFER_HEIGHT][x])
         } else {
             Err(())
         }
@@ -73,23 +82,23 @@ impl History {
 
     // TODO: remove if useless
     #[allow(dead_code)]
-    pub const fn get_line(&self, y: usize) -> Result<ScreenCharLine, ()> {
+    pub fn get_line(&self, y: usize) -> Result<ScreenCharLine, ()> {
+        let buffer = HISTORY_BUFFER.lock();
         if y < BUFFER_HEIGHT {
-            Ok(unsafe {
-                (*self.chars)[self.tty_id]
-                    [(self.descriptors[self.tty_id].current + y) % HISTORY_BUFFER_HEIGHT]
-            })
+            Ok(buffer.chars[self.tty_id]
+                [(self.descriptors[self.tty_id].current + y) % HISTORY_BUFFER_HEIGHT])
         } else {
             Err(())
         }
     }
 
     pub fn get_screen(&self) -> Screen {
+        let buffer = HISTORY_BUFFER.lock();
         let mut screen = [[ScreenChar {
             ascii_character: b' ',
             color_code: DEFAULT_COLOR_CODE,
         }; BUFFER_WIDTH]; BUFFER_HEIGHT];
-        let chars_ref = unsafe { &*self.chars };
+        let chars_ref = &buffer.chars;
         screen.iter_mut().enumerate().for_each(|(i, s)| {
             let index = (self.descriptors[self.tty_id].current + i) % HISTORY_BUFFER_HEIGHT;
             *s = chars_ref[self.tty_id][index];
@@ -140,7 +149,7 @@ impl History {
         if ok { Ok(()) } else { Err(()) }
     }
 
-    pub const fn new_line(&mut self) {
+    pub fn new_line(&mut self) {
         self.descriptors[self.tty_id].end =
             (self.descriptors[self.tty_id].end + 1) % HISTORY_BUFFER_HEIGHT;
         self.descriptors[self.tty_id].current = self.descriptors[self.tty_id].end;
@@ -150,15 +159,14 @@ impl History {
             self.descriptors[self.tty_id].begin =
                 (self.descriptors[self.tty_id].begin + 1) % HISTORY_BUFFER_HEIGHT;
         }
+        let mut buffer = HISTORY_BUFFER.lock();
         let new_line = [ScreenChar {
             ascii_character: b' ',
             color_code: DEFAULT_COLOR_CODE,
         }; BUFFER_WIDTH];
-        unsafe {
-            (*self.chars)[self.tty_id]
-                [(self.descriptors[self.tty_id].end + BUFFER_HEIGHT - 1) % HISTORY_BUFFER_HEIGHT] =
-                new_line;
-        }
+        buffer.chars[self.tty_id]
+            [(self.descriptors[self.tty_id].end + BUFFER_HEIGHT - 1) % HISTORY_BUFFER_HEIGHT] =
+            new_line;
     }
 
     pub const fn change_tty_id(&mut self, id: usize) -> Result<(), ()> {

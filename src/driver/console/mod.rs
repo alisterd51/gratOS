@@ -273,7 +273,7 @@ impl Console {
         self.update_cursor();
     }
 
-    const fn write_ascii(&mut self, byte: u8) {
+    fn write_ascii(&mut self, byte: u8) {
         let row = self.descriptors[self.id].row_position;
         let col = self.descriptors[self.id].column_position;
         let color_code = self.descriptors[self.id].color_code;
@@ -283,7 +283,7 @@ impl Console {
         };
 
         self.writer.set_char(&c, col, row);
-        self.history.set_char(&c, col, row);
+        self.history.set_char(c, col, row);
     }
 
     fn get_current_line(&self) -> Line {
@@ -330,7 +330,7 @@ impl Console {
         self.update_screen();
     }
 
-    const fn clear_row(&mut self, row: usize) {
+    fn clear_row(&mut self, row: usize) {
         let blank = ScreenChar {
             ascii_character: b' ',
             color_code: self.descriptors[self.id].color_code,
