@@ -1,5 +1,4 @@
 mod halt;
-mod print_gdt;
 mod print_kernel_stack;
 mod reboot;
 mod shutdown;
@@ -8,7 +7,7 @@ use super::{
     console::{self, NUMBER_OF_REGULAR_TTY},
     vga::{BUFFER_WIDTH, Line},
 };
-use crate::{bootprotocol, mutex::Mutex, print, println};
+use crate::{bootprotocol, gdt, mutex::Mutex, print, println};
 
 const PS1: &str = "> ";
 
@@ -68,7 +67,7 @@ impl Shell {
         } else if compare_command(b"halt", &self.command) {
             halt::halt();
         } else if compare_command(b"print_gdt", &self.command) {
-            print_gdt::print_gdt();
+            gdt::print();
         } else if compare_command(b"print_multiboot", &self.command) {
             bootprotocol::print();
         } else if compare_command(b"print_kernel_stack", &self.command) {
