@@ -33,15 +33,22 @@ fn parse_command(line: &Line) -> Option<&str> {
 
 fn execute_command(line: &Line) {
     if let Some(command) = parse_command(line) {
+        let mut parts = command.split_whitespace();
+        let command = parts.next().unwrap_or("");
         match command {
             "help" => println!(
-                "all commands:\n\thalt\n\tprint_gdt\n\tprint_multiboot\n\tprint_kernel_stack\n\tprint_kernel_stack_test\n\treboot\n\tshutdown\n\ttest_colors"
+                "all commands:\n\thalt\n\tprint_gdt\n\tprint_multiboot\n\tprint_kernel_stack [bytes]\n\treboot\n\tshutdown\n\ttest_colors"
             ),
             "halt" => halt::halt(),
             "print_gdt" => gdt::print(),
             "print_multiboot" => bootprotocol::print(),
-            "print_kernel_stack" => print_kernel_stack::print_kernel_stack(0),
-            "print_kernel_stack_test" => print_kernel_stack::test(),
+            "print_kernel_stack" => {
+                let bytes = parts
+                    .next()
+                    .and_then(|arg| arg.parse::<u32>().ok())
+                    .unwrap_or(0);
+                print_kernel_stack::print_kernel_stack(bytes);
+            }
             "reboot" => reboot::reboot(),
             "shutdown" => shutdown::qemu(),
             "test_colors" => console::test_colors(),
