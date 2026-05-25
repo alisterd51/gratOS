@@ -287,24 +287,16 @@ impl Console {
     }
 
     fn get_current_line(&self) -> Line {
-        let line = self
-            .history
-            .get_line(self.descriptors[self.id].row_position);
         let mut new_line = [0u8; BUFFER_WIDTH];
-
-        if let Ok(line) = line {
-            new_line
-                .iter_mut()
-                .zip(line.iter())
-                .for_each(|(new_char, screen_char)| {
-                    let c = screen_char.ascii_character;
-                    if c.is_ascii_whitespace() {
-                        *new_char = b'\0';
-                    } else {
-                        *new_char = c;
-                    }
-                });
+        if let Ok(line) = self
+            .history
+            .get_line(self.descriptors[self.id].row_position)
+        {
+            for (new_char, screen_char) in new_line.iter_mut().zip(line.iter()) {
+                *new_char = screen_char.ascii_character;
+            }
         }
+
         new_line
     }
 

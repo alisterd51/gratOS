@@ -1,6 +1,6 @@
 [package]
 name = "gratos"
-version = "0.2.16"
+version = "0.2.17"
 edition = "2024"
 description = "kernel from scratch"
 repository = "https://github.com/alisterd51/gratOS"
