@@ -1,7 +1,6 @@
 use crate::io::outw;
 use core::arch::asm;
 
-#[allow(dead_code)]
 pub fn qemu() {
     unsafe {
         asm!("cli",);
