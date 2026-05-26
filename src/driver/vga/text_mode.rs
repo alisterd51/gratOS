@@ -1,5 +1,6 @@
 use super::{BUFFER_WIDTH, Screen, ScreenChar, ScreenCharLine};
 use crate::io::outb;
+use core::ptr::write_volatile;
 
 #[repr(transparent)]
 struct Buffer {
@@ -19,16 +20,28 @@ impl Writer {
         }
     }
 
-    pub const fn set_char(&mut self, c: &ScreenChar, col: usize, row: usize) {
-        unsafe { (*self.buffer).chars[row][col] = *c };
+    #[allow(clippy::volatile_composites)]
+    pub fn set_char(&mut self, c: &ScreenChar, col: usize, row: usize) {
+        unsafe {
+            let dst = &raw mut (*self.buffer).chars[row][col];
+            write_volatile(dst, *c);
+        }
     }
 
-    pub const fn set_line(&mut self, line: &ScreenCharLine, row: usize) {
-        unsafe { (*self.buffer).chars[row] = *line };
+    #[allow(clippy::volatile_composites)]
+    pub fn set_line(&mut self, line: &ScreenCharLine, row: usize) {
+        unsafe {
+            let dst = &raw mut (*self.buffer).chars[row];
+            write_volatile(dst, *line);
+        }
     }
 
-    pub const fn set_screen(&mut self, screen: &Screen) {
-        unsafe { (*self.buffer).chars = *screen };
+    #[allow(clippy::volatile_composites)]
+    pub fn set_screen(&mut self, screen: &Screen) {
+        unsafe {
+            let dst = &raw mut (*self.buffer).chars;
+            write_volatile(dst, *screen);
+        }
     }
 }
 
