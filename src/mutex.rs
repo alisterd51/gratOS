@@ -1,5 +1,8 @@
+// https://mara.nl/atomics/building-spinlock.html
+
 use core::{
     cell::UnsafeCell,
+    hint::spin_loop,
     ops::{Deref, DerefMut},
     sync::atomic::{AtomicBool, Ordering},
 };
@@ -20,11 +23,17 @@ impl<T> Mutex<T> {
     }
 
     pub fn lock(&self) -> MutexGuard<'_, T> {
-        while self
-            .lock
-            .compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed)
-            .is_err()
-        {}
+        loop {
+            if !self.lock.load(Ordering::Relaxed)
+                && self
+                    .lock
+                    .compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed)
+                    .is_ok()
+            {
+                break;
+            }
+            spin_loop();
+        }
 
         MutexGuard { mutex: self }
     }
