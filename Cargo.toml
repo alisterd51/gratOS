@@ -1,6 +1,6 @@
 [package]
 name = "gratos"
-version = "0.2.17"
+version = "0.2.18"
 edition = "2024"
 description = "kernel from scratch"
 repository = "https://github.com/alisterd51/gratOS"
@@ -37,7 +37,7 @@ nursery = "deny"
 cargo = "deny"
 # from clippy::restriction
 # indexing_slicing = "deny"
-# unwrap_used = "deny"
+unwrap_used = "deny"
 
 [features]
 default = []

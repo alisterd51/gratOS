@@ -433,7 +433,7 @@ macro_rules! println {
 pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
 
-    WRITER.lock().write_fmt(args).unwrap();
+    let _ = WRITER.lock().write_fmt(args);
 }
 
 static WRITER: Mutex<Console> = Mutex::new(Console::new());
