@@ -144,6 +144,22 @@ pub unsafe fn map_page(virt_addr: VirtAddr, phys_addr: PhysAddr, flags: PageTabl
     }
 }
 
+pub unsafe fn unmap_page(virt_addr: VirtAddr) {
+    let pte_index = virt_addr.pte_index();
+    let table_vaddr = virt_addr.page_table_vaddr().0 as *mut PageTable;
+
+    unsafe {
+        (*table_vaddr).entries[pte_index] = PageTableEntry::empty();
+    }
+    unsafe {
+        asm!(
+            "invlpg [{0}]",
+            in(reg) virt_addr.0,
+            options(nostack, preserves_flags)
+        );
+    }
+}
+
 pub unsafe fn setup_recursive_paging() {
     let pd_phys_addr = get_page_directory_address();
     let pd_frame = PhysFrame::containing_address(PhysAddr(u64::from(pd_phys_addr)));

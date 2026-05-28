@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 
+extern crate alloc;
+
 mod bootprotocol;
 mod driver;
 mod gdt;
