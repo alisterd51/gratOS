@@ -1,8 +1,12 @@
 use crate::{bootprotocol, memory::bitmap::BitmapAllocator, mutex::Mutex, println};
 use core::ptr::addr_of;
 
+mod allocator;
 mod bitmap;
+mod heap;
 mod paging;
+
+pub const PAGE_SIZE: usize = 4096;
 
 // Physical Memory Manager
 static PMM: Mutex<BitmapAllocator> = Mutex::new(BitmapAllocator::new());
@@ -16,7 +20,7 @@ pub struct PhysFrame {
 }
 
 impl PhysFrame {
-    pub const SIZE: u64 = 4096;
+    pub const SIZE: u64 = PAGE_SIZE as u64;
 
     pub const fn containing_address(address: PhysAddr) -> Self {
         Self {
@@ -44,7 +48,7 @@ impl VirtAddr {
 
     #[allow(clippy::cast_possible_truncation)]
     pub const fn page_table_vaddr(self) -> Self {
-        Self(0xFFC0_0000 + (self.pde_index() as u32 * 4096))
+        Self(0xFFC0_0000 + (self.pde_index() as u32 * PAGE_SIZE as u32))
     }
 
     pub const fn page_directory_vaddr() -> Self {
@@ -119,6 +123,8 @@ pub fn init() {
         paging::enable_paging();
         paging::set_paging_active();
     }
+
+    heap::init();
 }
 
 #[allow(dead_code)]

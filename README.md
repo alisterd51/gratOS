@@ -89,25 +89,25 @@ qemu-system-i386 -cdrom gratos.x86.grub.iso
     - [x] You must enable memory paging in your Kernel
     - [x] You must code a memory structure that handle paging and memory rights (Careful, you don’t have the tools yet to know who’s accessing the memory, so all of this is theoric at the moment)
     - [ ] You must define Kernel and User space
-    - [ ] You must implement a function to create / get memory pages
-    - [ ] You must implement functions to `allocate`, `free` and `get` size of a variable
-    - [ ] You must implement those functions for `virtual` and `physical` memory
+    - [x] You must implement a function to create / get memory pages
+    - [x] You must implement functions to `allocate`, `free` and `get` size of a variable
+    - [x] You must implement those functions for `virtual` and `physical` memory
     - [ ] You must handle "kernel panics" (Print, stop the kernel)
     - [x] A complete memory code structure, with pagination handling
-    - [ ] Read and Write rights on memory
+    - [x] Read and Write rights on memory
     - [ ] User space memory and Kernel space memory
     - [x] Physical and Virtual memory
-    - [ ] Code helpers for physical memory:
-      - [ ] kmalloc
-      - [ ] kfree
-      - [ ] ksize
-      - [ ] kbrk
-    - [ ] Code helpers for virtual memory:
-      - [ ] vmalloc
-      - [ ] vfree
-      - [ ] vsize
-      - [ ] vbrk
-    - [ ] Kernel Panic handling
+    - [x] Code helpers for physical memory:
+      - [x] kmalloc (dma_alloc)
+      - [x] kfree (dma_free)
+      - [ ] ksize (irrelevant in rust)
+      - [ ] kbrk (irrelevant in rust)
+    - [x] Code helpers for virtual memory: (GlobalAlloc)
+      - [x] vmalloc (alloc)
+      - [x] vfree (dealloc)
+      - [ ] vsize (irrelevant in rust)
+      - [x] vbrk (sbrk)
+    - [x] Kernel Panic handling
     - [x] Your work should not exceed 10 MB
   - [ ] Bonus:
     - [ ] try to implement `memory` `dumping` and `debug` in the last "mini-shell" subject
