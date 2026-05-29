@@ -139,4 +139,12 @@ impl BitmapAllocator {
 
         Some(PhysFrame { number: start })
     }
+
+    pub fn count_free_frames(&self) -> usize {
+        let mut free = 0;
+        for word in &self.bitmap {
+            free += word.count_zeros() as usize;
+        }
+        free
+    }
 }

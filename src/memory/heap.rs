@@ -160,10 +160,12 @@ pub fn dma_free(virt_base_addr: usize, phys_base_addr: u64, size_in_bytes: usize
             pmm.free_frame(PhysFrame {
                 number: start_frame_number + i,
             });
+        }
+    }
 
-            unsafe {
-                paging::unmap_page(VirtAddr((virt_base_addr + i * PAGE_SIZE) as u32));
-            }
+    for i in 0..pages_to_free {
+        unsafe {
+            paging::unmap_page(VirtAddr((virt_base_addr + i * PAGE_SIZE) as u32));
         }
     }
 
@@ -173,4 +175,12 @@ pub fn dma_free(virt_base_addr: usize, phys_base_addr: u64, size_in_bytes: usize
         ranges.push((virt_base_addr, bytes_freed));
         coalesce_dma_ranges(&mut ranges);
     }
+}
+
+pub fn get_heap_end() -> usize {
+    HEAP_CURRENT_END.load(Ordering::SeqCst)
+}
+
+pub fn get_dma_end() -> usize {
+    DMA_CURRENT_END.load(Ordering::SeqCst)
 }

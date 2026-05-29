@@ -28,7 +28,6 @@ impl PhysFrame {
         }
     }
 
-    #[allow(dead_code)]
     pub const fn start_address(self) -> PhysAddr {
         PhysAddr((self.number as u64) * Self::SIZE)
     }
@@ -127,15 +126,41 @@ pub fn init() {
     heap::init();
 }
 
-#[allow(dead_code)]
 pub fn allocate_frame() -> Option<PhysFrame> {
     PMM.lock().allocate_frame()
 }
 
+#[allow(clippy::similar_names)]
 pub fn print() {
     let start = kernel_start().0;
     let end = kernel_end().0;
     let size = kernel_size();
+    let free_frames = PMM.lock().count_free_frames();
+    let free_ram_kb = (free_frames * PAGE_SIZE) / 1024;
+    let free_ram_mb = free_ram_kb / 1024;
+    let heap_start = heap::HEAP_START;
+    let heap_end = heap::get_heap_end();
+    let heap_size_kb = (heap_end - heap_start) / 1024;
+    let dma_start = heap::DMA_START;
+    let dma_end = heap::get_dma_end();
+    let dma_size_kb = (dma_end - dma_start) / 1024;
 
-    println!("kernel: start: {start}, end: {end}, size: {size}");
+    println!(
+        "Kernel Physical: 0x{:08X} to 0x{:08X} ({} KB)",
+        start,
+        end,
+        size / 1024
+    );
+    println!(
+        "Physical RAM: {} MB Free ({} free frames)",
+        free_ram_mb, free_frames
+    );
+    println!(
+        "Virtual Heap: 0x{:08X} to 0x{:08X} ({} KB alloc)",
+        heap_start, heap_end, heap_size_kb
+    );
+    println!(
+        "Virtual DMA: 0x{:08X} to 0x{:08X} ({} KB max)",
+        dma_start, dma_end, dma_size_kb
+    );
 }

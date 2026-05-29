@@ -88,14 +88,14 @@ qemu-system-i386 -cdrom gratos.x86.grub.iso
   - [ ] Mandatory:
     - [x] You must enable memory paging in your Kernel
     - [x] You must code a memory structure that handle paging and memory rights (Careful, you don’t have the tools yet to know who’s accessing the memory, so all of this is theoric at the moment)
-    - [ ] You must define Kernel and User space
+    - [x] You must define Kernel and User space
     - [x] You must implement a function to create / get memory pages
     - [x] You must implement functions to `allocate`, `free` and `get` size of a variable
     - [x] You must implement those functions for `virtual` and `physical` memory
     - [ ] You must handle "kernel panics" (Print, stop the kernel)
     - [x] A complete memory code structure, with pagination handling
     - [x] Read and Write rights on memory
-    - [ ] User space memory and Kernel space memory
+    - [x] User space memory and Kernel space memory
     - [x] Physical and Virtual memory
     - [x] Code helpers for physical memory:
       - [x] kmalloc (dma_alloc)

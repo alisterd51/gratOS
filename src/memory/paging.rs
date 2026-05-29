@@ -1,10 +1,15 @@
-use crate::memory::{PhysAddr, PhysFrame, VirtAddr, allocate_frame};
+use crate::memory::{PMM, PhysAddr, PhysFrame, VirtAddr, allocate_frame};
 use core::{
     arch::asm,
-    ops::BitOr,
-    ptr::addr_of,
+    ops::{BitOr, BitOrAssign},
+    ptr::{addr_of, addr_of_mut},
     sync::atomic::{AtomicBool, Ordering},
 };
+
+const KERNEL_VBASE: u32 = 0xC000_0000;
+const PAGE_MASK: u32 = 0xFFFF_F000;
+const ENTRIES_PER_TABLE: usize = 1024;
+const RECURSIVE_INDEX: usize = 1023;
 
 // https://wiki.osdev.org/Paging
 #[derive(Clone, Copy)]
@@ -26,6 +31,14 @@ impl PageTableFlags {
     pub const fn bits(self) -> u32 {
         self.0
     }
+
+    pub const fn contains(self, flag: Self) -> bool {
+        (self.0 & flag.0) == flag.0
+    }
+
+    pub const fn remove(self, flag: Self) -> Self {
+        Self(self.0 & !flag.0)
+    }
 }
 
 impl BitOr for PageTableFlags {
@@ -33,6 +46,12 @@ impl BitOr for PageTableFlags {
 
     fn bitor(self, rhs: Self) -> Self::Output {
         Self(self.0 | rhs.0)
+    }
+}
+
+impl BitOrAssign for PageTableFlags {
+    fn bitor_assign(&mut self, rhs: Self) {
+        self.0 |= rhs.0;
     }
 }
 
@@ -51,7 +70,7 @@ impl PageTableEntry {
 
     pub fn frame(self) -> Option<PhysFrame> {
         if self.is_present() {
-            let frame_address = self.0 & 0xFFFF_F000;
+            let frame_address = self.0 & PAGE_MASK;
             Some(PhysFrame::containing_address(PhysAddr(u64::from(
                 frame_address,
             ))))
@@ -69,13 +88,13 @@ impl PageTableEntry {
 #[derive(Clone, Copy)]
 #[repr(C, align(4096))]
 pub struct PageTable {
-    pub entries: [PageTableEntry; 1024],
+    pub entries: [PageTableEntry; ENTRIES_PER_TABLE],
 }
 
 impl PageTable {
     pub const fn empty() -> Self {
         Self {
-            entries: [PageTableEntry::empty(); 1024],
+            entries: [PageTableEntry::empty(); ENTRIES_PER_TABLE],
         }
     }
 
@@ -102,68 +121,106 @@ pub fn is_paging_active() -> bool {
     PAGING_ACTIVE.load(Ordering::SeqCst)
 }
 
-#[allow(clippy::similar_names)]
-pub unsafe fn map_page(virt_addr: VirtAddr, phys_addr: PhysAddr, flags: PageTableFlags) {
-    let pde_index = virt_addr.pde_index();
-    let pte_index = virt_addr.pte_index();
-    let pd_ptr = if is_paging_active() {
+fn current_page_directory() -> *mut PageTable {
+    if is_paging_active() {
         VirtAddr::page_directory_vaddr().0 as *mut PageTable
     } else {
-        addr_of!(KERNEL_PAGE_DIRECTORY).cast_mut()
-    };
-    let pd_entry = unsafe { &mut (*pd_ptr).entries[pde_index] };
-    let table_frame = pd_entry.frame().unwrap_or_else(|| {
-        let new_table_frame = allocate_frame().expect("VMM: Out of memory during page mapping");
+        addr_of_mut!(KERNEL_PAGE_DIRECTORY)
+    }
+}
 
-        pd_entry.set_frame(
-            new_table_frame,
-            PageTableFlags::PRESENT | PageTableFlags::WRITABLE | PageTableFlags::USER_ACCESSIBLE,
-        );
-
-        let table_vaddr = if is_paging_active() {
-            virt_addr.page_table_vaddr().0 as *mut PageTable
-        } else {
-            new_table_frame.start_address().0 as *mut PageTable
-        };
-
-        unsafe {
-            (*table_vaddr).clear();
-        }
-
-        new_table_frame
-    });
-    let table_vaddr = if is_paging_active() {
+fn resolve_table_vaddr(virt_addr: VirtAddr, table_frame: PhysFrame) -> *mut PageTable {
+    if is_paging_active() {
         virt_addr.page_table_vaddr().0 as *mut PageTable
     } else {
         table_frame.start_address().0 as *mut PageTable
-    };
+    }
+}
+
+fn flush_tlb(addr: u32) {
+    if is_paging_active() {
+        unsafe {
+            asm!(
+                "invlpg [{0}]",
+                in(reg) addr,
+                options(nostack, preserves_flags)
+            );
+        }
+    }
+}
+
+#[allow(clippy::similar_names)]
+pub unsafe fn map_page(virt_addr: VirtAddr, phys_addr: PhysAddr, mut flags: PageTableFlags) {
+    let pde_index = virt_addr.pde_index();
+    let pte_index = virt_addr.pte_index();
+    let is_user_space = virt_addr.0 < KERNEL_VBASE;
+
+    if !is_user_space {
+        flags = flags.remove(PageTableFlags::USER_ACCESSIBLE);
+    }
+
+    let pd_ptr = current_page_directory();
+    let pd_entry = unsafe { &mut (*pd_ptr).entries[pde_index] };
+    let mut is_new_table = false;
+    let table_frame = pd_entry.frame().unwrap_or_else(|| {
+        is_new_table = true;
+        let new_table_frame = allocate_frame().expect("VMM: Out of memory during page mapping");
+        let mut pde_flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE;
+
+        if is_user_space {
+            pde_flags |= PageTableFlags::USER_ACCESSIBLE;
+        }
+
+        pd_entry.set_frame(new_table_frame, pde_flags);
+        new_table_frame
+    });
+
+    let table_vaddr = resolve_table_vaddr(virt_addr, table_frame);
 
     unsafe {
+        if is_new_table {
+            (*table_vaddr).clear();
+        }
+
         (*table_vaddr).entries[pte_index]
             .set_frame(PhysFrame::containing_address(phys_addr), flags);
     }
 }
 
+#[allow(clippy::similar_names)]
 pub unsafe fn unmap_page(virt_addr: VirtAddr) {
+    let pde_index = virt_addr.pde_index();
+    let pd_ptr = current_page_directory();
+    let pd_entry = unsafe { &mut (*pd_ptr).entries[pde_index] };
+    let Some(table_frame) = pd_entry.frame() else {
+        return;
+    };
     let pte_index = virt_addr.pte_index();
-    let table_vaddr = virt_addr.page_table_vaddr().0 as *mut PageTable;
+    let table_vaddr = resolve_table_vaddr(virt_addr, table_frame);
 
     unsafe {
         (*table_vaddr).entries[pte_index] = PageTableEntry::empty();
     }
-    unsafe {
-        asm!(
-            "invlpg [{0}]",
-            in(reg) virt_addr.0,
-            options(nostack, preserves_flags)
-        );
+    flush_tlb(virt_addr.0);
+
+    let is_table_empty = unsafe {
+        !(*table_vaddr)
+            .entries
+            .iter()
+            .any(|entry| entry.is_present())
+    };
+
+    if is_table_empty {
+        *pd_entry = PageTableEntry::empty();
+        flush_tlb(table_vaddr as u32);
+        PMM.lock().free_frame(table_frame);
     }
 }
 
 pub unsafe fn setup_recursive_paging() {
     let pd_phys_addr = get_page_directory_address();
     let pd_frame = PhysFrame::containing_address(PhysAddr(u64::from(pd_phys_addr)));
-    let recursive_entry = unsafe { &mut KERNEL_PAGE_DIRECTORY.entries[1023] };
+    let recursive_entry = unsafe { &mut KERNEL_PAGE_DIRECTORY.entries[RECURSIVE_INDEX] };
 
     recursive_entry.set_frame(pd_frame, PageTableFlags::PRESENT | PageTableFlags::WRITABLE);
 }

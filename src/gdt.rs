@@ -2,7 +2,6 @@ use crate::println;
 use core::{arch::asm, fmt};
 
 const RPL_KERNEL: u16 = 0;
-#[allow(dead_code)]
 const RPL_USER: u16 = 3;
 
 const KERNEL_CODE_SEGMENT_SELECTOR: u16 = (1 << 3) | RPL_KERNEL;
