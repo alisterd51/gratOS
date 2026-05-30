@@ -111,6 +111,25 @@ qemu-system-i386 -cdrom gratos.x86.grub.iso
     - [x] Your work should not exceed 10 MB
   - [x] Bonus:
     - [x] try to implement `memory dumping` and `debug` in the last "mini-shell" subject
+- [ ] KFS-4 (gratOS:0.4.0):
+  - [ ] Mandatory:
+    - [ ] Registers cleaning
+    - [ ] Stack saving
+    - [ ] Hardware Interrupts
+    - [ ] Software Interrupts
+    - [ ] A Interrupts Descriptor Table
+    - [ ] Sigal handling and scheduling
+    - [ ] Global Panic Fault handling
+    - [ ] Create an Interrupts Descriptor Table, fill it and register it
+    - [ ] A signal-callback system on your Kernel API
+    - [ ] An interface to schedule signals
+    - [ ] An interface to clean registers before a panic / halt
+    - [ ] An interface to save the stack before a panic
+    - [ ] implement a IDT keyboard handling system
+  - [ ] Bonus:
+    - [ ] It has not been said, but syscalls are also handled by the IDT. You can’t implement them now (No processus / Execution), but a good start could be coding the base functions for it, it could save you some work.
+    - [ ] Also, you can add some features to the keyboard handler, for example multi layouts (qwerty, azerty), base functions like get_line (just like read: waits for characters and return them when \n is pressed).
+
 - [x] Other:
   - [x] add CI to build and serve an iso of gratOS
   - [x] add multiboot/multiboot2 helpers
