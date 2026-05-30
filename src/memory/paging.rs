@@ -217,6 +217,20 @@ pub unsafe fn unmap_page(virt_addr: VirtAddr) {
     }
 }
 
+#[allow(clippy::similar_names)]
+pub fn is_page_mapped(virt_addr: VirtAddr) -> bool {
+    let pde_index = virt_addr.pde_index();
+    let pd_ptr = current_page_directory();
+    let pd_entry = unsafe { &(*pd_ptr).entries[pde_index] };
+
+    pd_entry.frame().is_some_and(|table_frame| {
+        let pte_index = virt_addr.pte_index();
+        let table_vaddr = resolve_table_vaddr(virt_addr, table_frame);
+
+        unsafe { (*table_vaddr).entries[pte_index].is_present() }
+    })
+}
+
 pub unsafe fn setup_recursive_paging() {
     let pd_phys_addr = get_page_directory_address();
     let pd_frame = PhysFrame::containing_address(PhysAddr(u64::from(pd_phys_addr)));

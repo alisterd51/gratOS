@@ -2,9 +2,15 @@ use crate::{
     memory::{PAGE_SIZE, heap::sbrk},
     mutex::Mutex,
 };
-use core::{alloc::GlobalAlloc, ptr::null_mut};
+use core::{
+    alloc::GlobalAlloc,
+    ptr::null_mut,
+    sync::atomic::{AtomicUsize, Ordering},
+};
 
 const BLOCK_SIZES: &[usize] = &[8, 16, 32, 64, 128, 256, 512, 1024, 2048];
+
+pub static HEAP_USED_BYTES: AtomicUsize = AtomicUsize::new(0);
 
 pub const fn align_up(addr: usize, align: usize) -> usize {
     (addr + align - 1) & !(align - 1)
@@ -204,8 +210,7 @@ impl FixedSizeBlockAllocator {
 unsafe impl GlobalAlloc for Mutex<FixedSizeBlockAllocator> {
     unsafe fn alloc(&self, layout: core::alloc::Layout) -> *mut u8 {
         let mut allocator = self.lock();
-
-        match list_index(&layout) {
+        let ptr = match list_index(&layout) {
             Some(index) => {
                 if let Some(node) = allocator.list_heads[index].take() {
                     allocator.list_heads[index] = node.next.take();
@@ -243,11 +248,19 @@ unsafe impl GlobalAlloc for Mutex<FixedSizeBlockAllocator> {
                 }
             }
             None => unsafe { allocator.fallback_alloc(layout) },
+        };
+
+        if !ptr.is_null() {
+            HEAP_USED_BYTES.fetch_add(layout.size(), Ordering::Relaxed);
         }
+
+        ptr
     }
 
     #[allow(clippy::cast_ptr_alignment)]
     unsafe fn dealloc(&self, ptr: *mut u8, layout: core::alloc::Layout) {
+        HEAP_USED_BYTES.fetch_sub(layout.size(), Ordering::Relaxed);
+
         let mut allocator = self.lock();
 
         if let Some(index) = list_index(&layout) {

@@ -1,4 +1,5 @@
-mod print_kernel_stack;
+mod debug;
+mod hexdump;
 
 use super::{
     console::{self, NUMBER_OF_REGULAR_TTY},
@@ -37,21 +38,52 @@ fn execute_command(line: &Line) {
     if let Some(command) = parse_command(line) {
         let mut parts = command.split_whitespace();
         let command = parts.next().unwrap_or("");
+        let arg = parts.next();
+
         match command {
             "help" => println!(
-                "all commands:\n\thalt\n\tpanic\n\tprint_gdt\n\tprint_memory\n\tprint_multiboot\n\tprint_kernel_stack [bytes]\n\treboot\n\tshutdown\n\ttest_colors"
+                "all commands:\n\thalt\n\tpanic\n\tprint_gdt\n\tprint_memory\n\tprint_multiboot\n\talloc_heap [size]\n\tfree_heap\n\talloc_dma [size]\n\tfree_dma\n\tdump_stack [bytes]\n\tdump_heap [bytes]\n\tdump_dma [bytes]\n\tdump_vga [lines]\n\treboot\n\tshutdown\n\ttest_colors"
             ),
             "halt" => halt::halt(),
             "panic" => panic!(),
             "print_gdt" => gdt::print(),
             "print_memory" => memory::print(),
             "print_multiboot" => bootprotocol::print(),
-            "print_kernel_stack" => {
-                let bytes = parts
-                    .next()
-                    .and_then(|arg| arg.parse::<u32>().ok())
-                    .unwrap_or(0);
-                print_kernel_stack::print_kernel_stack(bytes);
+            "alloc_heap" => {
+                let size = arg.and_then(|a| a.parse::<usize>().ok()).unwrap_or(64);
+
+                debug::alloc_heap(size);
+            }
+            "free_heap" => {
+                debug::free_heap();
+            }
+            "alloc_dma" => {
+                let size = arg.and_then(|a| a.parse::<usize>().ok()).unwrap_or(4096);
+
+                debug::alloc_dma(size);
+            }
+            "free_dma" => {
+                debug::free_dma();
+            }
+            "dump_stack" => {
+                let bytes = arg.and_then(|a| a.parse::<usize>().ok()).unwrap_or(128);
+
+                debug::print_stack(bytes);
+            }
+            "dump_heap" => {
+                let bytes = arg.and_then(|a| a.parse::<usize>().ok()).unwrap_or(128);
+
+                debug::print_heap(bytes);
+            }
+            "dump_dma" => {
+                let bytes = arg.and_then(|a| a.parse::<usize>().ok()).unwrap_or(128);
+
+                debug::print_dma(bytes);
+            }
+            "dump_vga" => {
+                let lines = arg.and_then(|a| a.parse::<usize>().ok()).unwrap_or(25);
+
+                debug::print_vga(lines);
             }
             "reboot" => reboot::reboot(),
             "shutdown" => shutdown::qemu(),
