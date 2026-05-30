@@ -9,14 +9,16 @@ mod gdt;
 mod io;
 mod memory;
 mod mutex;
+mod power;
 
+use crate::power::halt;
 use core::{arch::global_asm, panic::PanicInfo};
 use driver::{console, keyboard, shell};
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    println!("{info}");
-    loop {}
+    println!("{}\n{info}", console::RESET);
+    halt::halt();
 }
 
 #[unsafe(no_mangle)]

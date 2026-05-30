@@ -41,6 +41,7 @@ impl fmt::Display for MemoryMapEntry {
 }
 
 impl MemoryMapEntry {
+    #[allow(dead_code)]
     pub const fn empty() -> Self {
         Self {
             base_addr: 0,
