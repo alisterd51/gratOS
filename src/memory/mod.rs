@@ -3,8 +3,8 @@ use core::ptr::addr_of;
 
 mod allocator;
 mod bitmap;
-mod heap;
-mod paging;
+pub mod heap;
+pub mod paging;
 
 pub const PAGE_SIZE: usize = 4096;
 
@@ -135,15 +135,21 @@ pub fn print() {
     let start = kernel_start().0;
     let end = kernel_end().0;
     let size = kernel_size();
+
     let free_frames = PMM.lock().count_free_frames();
     let free_ram_kb = (free_frames * PAGE_SIZE) / 1024;
     let free_ram_mb = free_ram_kb / 1024;
+
     let heap_start = heap::HEAP_START;
     let heap_end = heap::get_heap_end();
-    let heap_size_kb = (heap_end - heap_start) / 1024;
+    let heap_capacity_bytes = heap_end - heap_start;
+    let heap_used_bytes = allocator::HEAP_USED_BYTES.load(core::sync::atomic::Ordering::Relaxed);
+
     let dma_start = heap::DMA_START;
     let dma_end = heap::get_dma_end();
-    let dma_size_kb = (dma_end - dma_start) / 1024;
+    let dma_capacity_bytes = dma_end - dma_start;
+    let dma_free_bytes = heap::get_free_dma_bytes();
+    let dma_used_bytes = dma_capacity_bytes - dma_free_bytes;
 
     println!(
         "Kernel Physical: 0x{:08X} to 0x{:08X} ({} KB)",
@@ -156,11 +162,13 @@ pub fn print() {
         free_ram_mb, free_frames
     );
     println!(
-        "Virtual Heap: 0x{:08X} to 0x{:08X} ({} KB alloc)",
-        heap_start, heap_end, heap_size_kb
+        "Virtual Heap: {} Bytes in use / {} KB capacity",
+        heap_used_bytes,
+        heap_capacity_bytes / 1024
     );
     println!(
-        "Virtual DMA: 0x{:08X} to 0x{:08X} ({} KB max)",
-        dma_start, dma_end, dma_size_kb
+        "Virtual DMA: {} Bytes in use / {} KB capacity",
+        dma_used_bytes,
+        dma_capacity_bytes / 1024
     );
 }

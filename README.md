@@ -84,7 +84,7 @@ qemu-system-i386 -cdrom gratos.x86.grub.iso
       - [x] print-kernel-stack-thing
       - [x] reboot
       - [x] halt
-- [ ] KFS-3 (gratOS:0.3.0):
+- [x] KFS-3 (gratOS:0.3.0):
   - [x] Mandatory:
     - [x] You must enable memory paging in your Kernel
     - [x] You must code a memory structure that handle paging and memory rights (Careful, you don’t have the tools yet to know who’s accessing the memory, so all of this is theoric at the moment)
@@ -109,8 +109,8 @@ qemu-system-i386 -cdrom gratos.x86.grub.iso
       - [x] vbrk (sbrk)
     - [x] Kernel Panic handling
     - [x] Your work should not exceed 10 MB
-  - [ ] Bonus:
-    - [ ] try to implement `memory` `dumping` and `debug` in the last "mini-shell" subject
+  - [x] Bonus:
+    - [x] try to implement `memory dumping` and `debug` in the last "mini-shell" subject
 - [x] Other:
   - [x] add CI to build and serve an iso of gratOS
   - [x] add multiboot/multiboot2 helpers

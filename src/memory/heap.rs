@@ -184,3 +184,8 @@ pub fn get_heap_end() -> usize {
 pub fn get_dma_end() -> usize {
     DMA_CURRENT_END.load(Ordering::SeqCst)
 }
+
+pub fn get_free_dma_bytes() -> usize {
+    let ranges = DMA_FREE_RANGES.lock();
+    ranges.iter().map(|(_, size)| *size).sum()
+}
