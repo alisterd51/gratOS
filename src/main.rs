@@ -6,18 +6,29 @@ extern crate alloc;
 mod bootprotocol;
 mod driver;
 mod gdt;
+mod idt;
+mod interrupts;
 mod io;
 mod memory;
 mod mutex;
 mod power;
 
-use crate::power::halt;
-use core::{arch::global_asm, panic::PanicInfo};
-use driver::{console, keyboard, shell};
+use crate::{
+    driver::{
+        console::{self, RESET},
+        keyboard::ps2::KEYBOARD,
+        pic, shell,
+    },
+    power::halt,
+};
+use core::{
+    arch::{asm, global_asm},
+    panic::PanicInfo,
+};
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    println!("{}\n{info}", console::RESET);
+    println!("{RESET}\n{info}");
     halt::halt();
 }
 
@@ -25,18 +36,17 @@ fn panic(info: &PanicInfo) -> ! {
 pub extern "C" fn kmain(magic: u32, info_addr: u32) -> ! {
     console::clear();
     gdt::init();
+    idt::init();
     bootprotocol::init(magic, info_addr);
     memory::init();
-
-    println!("{}42{}", console::FG_GREEN, console::FG_RESET);
-
-    let mut keyboard = keyboard::ps2::Keyboard::new();
+    pic::init();
 
     loop {
         shell::initialize(console::get_tty_id());
-        keyboard.get_input();
-        keyboard.interpret_to_vga_text_mode();
+        unsafe { asm!("cli", options(nomem, nostack, preserves_flags)) };
+        KEYBOARD.lock().interpret_to_vga_text_mode();
         shell::interpret(console::get_tty_id());
+        unsafe { asm!("sti", "hlt", options(nomem, nostack, preserves_flags)) };
     }
 }
 
@@ -45,3 +55,4 @@ global_asm!(include_str!("multiboot.s"), options(att_syntax));
 #[cfg(feature = "multiboot2")]
 global_asm!(include_str!("multiboot2.s"), options(att_syntax));
 global_asm!(include_str!("start.s"), options(att_syntax));
+global_asm!(include_str!("interrupts.s"), options(att_syntax));

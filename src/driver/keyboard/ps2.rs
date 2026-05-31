@@ -10,6 +10,7 @@ use crate::{
         keyboard::ScanCodeSet,
     },
     io::inb,
+    mutex::Mutex,
     print,
 };
 
@@ -207,3 +208,5 @@ impl Keyboard {
 const fn is_pressed(scancode: u16) -> bool {
     scancode & 0x80 == 0x0
 }
+
+pub static KEYBOARD: Mutex<Keyboard> = Mutex::new(Keyboard::new());
