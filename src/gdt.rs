@@ -4,7 +4,7 @@ use core::{arch::asm, fmt};
 const RPL_KERNEL: u16 = 0;
 const RPL_USER: u16 = 3;
 
-const KERNEL_CODE_SEGMENT_SELECTOR: u16 = (1 << 3) | RPL_KERNEL;
+pub const KERNEL_CODE_SEGMENT_SELECTOR: u16 = (1 << 3) | RPL_KERNEL;
 const KERNEL_DATA_SEGMENT_SELECTOR: u16 = (2 << 3) | RPL_KERNEL;
 #[allow(dead_code)]
 pub const USER_CODE_SEGMENT_SELECTOR: u16 = (3 << 3) | RPL_USER;

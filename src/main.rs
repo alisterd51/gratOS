@@ -6,6 +6,8 @@ extern crate alloc;
 mod bootprotocol;
 mod driver;
 mod gdt;
+mod idt;
+mod interrupts;
 mod io;
 mod memory;
 mod mutex;
@@ -25,6 +27,7 @@ fn panic(info: &PanicInfo) -> ! {
 pub extern "C" fn kmain(magic: u32, info_addr: u32) -> ! {
     console::clear();
     gdt::init();
+    idt::init();
     bootprotocol::init(magic, info_addr);
     memory::init();
 
@@ -45,3 +48,4 @@ global_asm!(include_str!("multiboot.s"), options(att_syntax));
 #[cfg(feature = "multiboot2")]
 global_asm!(include_str!("multiboot2.s"), options(att_syntax));
 global_asm!(include_str!("start.s"), options(att_syntax));
+global_asm!(include_str!("interrupts.s"), options(att_syntax));
