@@ -1,6 +1,9 @@
+use crate::driver::keyboard::ScanCodeValue;
+use alloc::collections::BTreeMap;
+
 pub mod us_qwerty;
 
-pub type Keymap = [Option<KeymapSet>; 0x80];
+pub type Keymap = BTreeMap<ScanCodeValue, KeymapSet>;
 
 #[derive(Clone, Copy)]
 pub enum KeymapValue {
