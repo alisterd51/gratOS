@@ -3,15 +3,15 @@
 .macro isr_no_error_code num
 .global isr\num
 isr\num:
-    pushl $0
-    pushl $\num
+    push 0
+    push \num
     jmp isr_common
 .endm
 
 .macro isr_error_code num
 .global isr\num
 isr\num:
-    pushl $\num
+    push \num
     jmp isr_common
 .endm
 
@@ -64,32 +64,50 @@ isr_no_error_code 45 /* FPU / Coprocessor / Inter-processor */
 isr_no_error_code 46 /* Primary ATA Hard Disk */
 isr_no_error_code 47 /* Secondary ATA Hard Disk */
 
+.macro push_segments
+    xor eax, eax
+    mov ax, ds
+    push eax
+    mov ax, es
+    push eax
+    mov ax, fs
+    push eax
+    mov ax, gs
+    push eax
+.endm
+
+.macro pop_segments
+    pop eax
+    mov gs, ax
+    pop eax
+    mov fs, ax
+    pop eax
+    mov es, ax
+    pop eax
+    mov ds, ax
+.endm
+
 .extern interrupt_dispatcher
 
 isr_common:
-    pushal
+    pushad
 
-    pushl %ds
-    pushl %es
-    pushl %fs
-    pushl %gs
+    push_segments
 
-    movw $0x10, %ax
-    movw %ax, %ds
-    movw %ax, %es
-    movw %ax, %fs
-    movw %ax, %gs
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
 
-    pushl %esp
+    push esp
     call interrupt_dispatcher
-    addl $4, %esp
+    add esp, 4
 
-    popl %gs
-    popl %fs
-    popl %es
-    popl %ds
-    popal
+    pop_segments
 
-    addl $8, %esp
+    popad
 
-    iret
+    add esp, 8
+
+    iretd

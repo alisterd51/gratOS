@@ -51,8 +51,8 @@ pub extern "C" fn kmain(magic: u32, info_addr: u32) -> ! {
 }
 
 #[cfg(feature = "multiboot")]
-global_asm!(include_str!("multiboot.s"), options(att_syntax));
+global_asm!(include_str!("multiboot.s"));
 #[cfg(feature = "multiboot2")]
-global_asm!(include_str!("multiboot2.s"), options(att_syntax));
-global_asm!(include_str!("start.s"), options(att_syntax));
-global_asm!(include_str!("interrupts.s"), options(att_syntax));
+global_asm!(include_str!("multiboot2.s"));
+global_asm!(include_str!("start.s"));
+global_asm!(include_str!("interrupts.s"));

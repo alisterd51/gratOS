@@ -8,16 +8,16 @@ stack_top:
 .global _start
 .type _start, @function
 _start:
-	mov $stack_top, %esp
+    mov esp, offset stack_top
 
-	push %ebx
-	push %eax
+    push ebx
+    push eax
 
-	call kmain
+    call kmain
 
-	cli
-1:	hlt
-	jmp 1b
+    cli
+1:  hlt
+    jmp 1b
 
 .size _start, . - _start
 
