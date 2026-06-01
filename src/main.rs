@@ -15,7 +15,7 @@ mod power;
 
 use crate::{
     driver::{
-        console::{self, RESET},
+        console::{self, FG_RED, FG_RESET, RESET},
         keyboard::ps2::KEYBOARD,
         pic, shell,
     },
@@ -28,7 +28,9 @@ use core::{
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    println!("{RESET}\n{info}");
+    println!("{RESET}{FG_RED}");
+    println!("{info}");
+    print!("{FG_RESET}");
     halt::halt();
 }
 
