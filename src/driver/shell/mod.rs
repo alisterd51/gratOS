@@ -11,6 +11,7 @@ use crate::{
     power::{halt, reboot, shutdown},
     print, println,
 };
+use core::{arch::asm, ptr::read_volatile};
 
 const PS1: &str = "> ";
 
@@ -88,6 +89,12 @@ fn execute_command(line: &Line) {
             "reboot" => reboot::reboot(),
             "shutdown" => shutdown::qemu(),
             "test_colors" => console::test_colors(),
+            "test_page_fault" => unsafe {
+                let _ = read_volatile(0xDEAD_BEEF as *const u32);
+            },
+            "test_invalid_opcode" => unsafe {
+                asm!("ud2", options(nomem, nostack));
+            },
             "" => {}
             _ => println!("command not found"),
         }

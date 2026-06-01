@@ -119,7 +119,7 @@ qemu-system-i386 -cdrom gratos.x86.grub.iso
     - [ ] Software Interrupts
     - [x] A Interrupts Descriptor Table
     - [ ] Sigal handling and scheduling
-    - [ ] Global Panic Fault handling
+    - [x] Global Panic Fault handling
     - [x] Create an Interrupts Descriptor Table, fill it and register it
     - [ ] A signal-callback system on your Kernel API
     - [ ] An interface to schedule signals
