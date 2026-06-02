@@ -113,8 +113,8 @@ qemu-system-i386 -cdrom gratos.x86.grub.iso
     - [x] try to implement `memory dumping` and `debug` in the last "mini-shell" subject
 - [ ] KFS-4 (gratOS:0.4.0):
   - [ ] Mandatory:
-    - [ ] Registers cleaning
-    - [ ] Stack saving
+    - [x] Registers cleaning
+    - [x] Stack saving
     - [x] Hardware Interrupts
     - [ ] Software Interrupts
     - [x] A Interrupts Descriptor Table
