@@ -43,7 +43,25 @@ fn execute_command(line: &Line) {
 
         match command {
             "help" => println!(
-                "all commands:\n\thalt\n\tpanic\n\tprint_gdt\n\tprint_memory\n\tprint_multiboot\n\talloc_heap [size]\n\tfree_heap\n\talloc_dma [size]\n\tfree_dma\n\tdump_stack [bytes]\n\tdump_heap [bytes]\n\tdump_dma [bytes]\n\tdump_vga [lines]\n\treboot\n\tshutdown\n\ttest_colors"
+                "all commands:\n\
+                \thalt\n\
+                \tpanic\n\
+                \tprint_gdt\n\
+                \tprint_memory\n\
+                \tprint_multiboot\n\
+                \talloc_heap [size]\n\
+                \tfree_heap\n\
+                \talloc_dma [size]\n\
+                \tfree_dma\n\
+                \tdump_stack [bytes]\n\
+                \tdump_heap [bytes]\n\
+                \tdump_dma [bytes]\n\
+                \tdump_vga [lines]\n\
+                \treboot\n\
+                \tshutdown\n\
+                \ttest_colors\n\
+                \ttest_page_fault\n\
+                \ttest_invalid_opcode"
             ),
             "halt" => halt::halt(),
             "panic" => panic!(),
