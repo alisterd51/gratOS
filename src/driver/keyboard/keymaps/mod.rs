@@ -1,3 +1,6 @@
+#[cfg(feature = "azerty")]
+pub mod fr_azerty;
+#[cfg(not(feature = "azerty"))]
 pub mod us_qwerty;
 
 pub type Keymap = [Option<KeymapSet>; 0x80];

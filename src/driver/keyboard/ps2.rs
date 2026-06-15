@@ -1,6 +1,10 @@
+#[cfg(feature = "azerty")]
+use super::keymaps::fr_azerty::FR_AZERTY_KEYMAP;
+#[cfg(not(feature = "azerty"))]
+use super::keymaps::us_qwerty::US_QUERTY_KEYMAP;
 use super::{
     fifo_buffer::FifoBuffer,
-    keymaps::{Keymap, KeymapValue, us_qwerty::US_QUERTY_KEYMAP},
+    keymaps::{Keymap, KeymapValue},
 };
 use crate::{
     driver::{
@@ -67,7 +71,10 @@ impl Keyboard {
         Self {
             buffer: FifoBuffer::new(),
             key_modifier: KeyModifier::new(),
+            #[cfg(not(feature = "azerty"))]
             keymap: &US_QUERTY_KEYMAP,
+            #[cfg(feature = "azerty")]
+            keymap: &FR_AZERTY_KEYMAP,
             scan_code_set: ScanCodeSet::new(),
         }
     }
