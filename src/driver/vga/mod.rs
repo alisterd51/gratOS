@@ -48,4 +48,5 @@ pub struct ScreenChar {
 
 pub type ScreenCharLine = [ScreenChar; BUFFER_WIDTH];
 pub type Screen = [ScreenCharLine; BUFFER_HEIGHT];
-pub type Line = [u8; BUFFER_WIDTH];
+pub const COMMAND_LINE_LENGTH: usize = BUFFER_WIDTH * BUFFER_HEIGHT;
+pub type CommandLine = [u8; COMMAND_LINE_LENGTH];

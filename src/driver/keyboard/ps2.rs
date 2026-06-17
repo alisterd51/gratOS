@@ -8,6 +8,7 @@ use crate::{
             self, CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT, CURSOR_UP, SCROLL_DOWN, SCROLL_UP,
         },
         keyboard::ScanCodeSet,
+        shell,
     },
     io::inb,
     mutex::Mutex,
@@ -98,6 +99,7 @@ impl Keyboard {
     fn interpret_keymapvalue(&mut self, keymap_value: KeymapValue, pressed: bool) {
         match keymap_value {
             KeymapValue::Ascii(c) | KeymapValue::Lowercase(c) | KeymapValue::Alt(c) if pressed => {
+                shell::push_char(console::get_tty_id(), c as u8);
                 print!("{c}");
             }
             KeymapValue::Control(c) | KeymapValue::ControlAlt(c) if pressed => {

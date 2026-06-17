@@ -3,7 +3,7 @@ mod hexdump;
 
 use super::{
     console::{self, NUMBER_OF_REGULAR_TTY},
-    vga::{BUFFER_WIDTH, Line},
+    vga::{COMMAND_LINE_LENGTH, CommandLine},
 };
 use crate::{
     bootprotocol, gdt, memory,
@@ -28,14 +28,13 @@ impl State {
     }
 }
 
-fn parse_command(line: &Line) -> Option<&str> {
-    let line = &line[PS1.len()..];
+fn parse_command(line: &CommandLine) -> Option<&str> {
     let end = line.iter().position(|&c| c == b'\0').unwrap_or(line.len());
     let command = &line[..end];
     core::str::from_utf8(command).ok().map(str::trim)
 }
 
-fn execute_command(line: &Line) {
+fn execute_command(line: &CommandLine) {
     if let Some(command) = parse_command(line) {
         let mut parts = command.split_whitespace();
         let command = parts.next().unwrap_or("");
@@ -122,19 +121,17 @@ fn execute_command(line: &Line) {
 #[derive(Clone, Copy)]
 struct Shell {
     state: State,
-    line: Line,
+    line: CommandLine,
+    len: usize,
 }
 
 impl Shell {
     const fn new() -> Self {
         Self {
             state: State::new(),
-            line: [b'\0'; BUFFER_WIDTH],
+            line: [b'\0'; COMMAND_LINE_LENGTH],
+            len: 0,
         }
-    }
-
-    const fn input_line(&mut self, line: &Line) {
-        self.line = *line;
     }
 }
 
@@ -153,10 +150,30 @@ pub fn initialize(id: usize) {
     }
 }
 
-pub fn add_line_to_buf(id: usize, line: &Line) {
+pub fn push_char(id: usize, byte: u8) {
+    let mut shell = SHELLS[id].lock();
+    if shell.state == State::Waiting && shell.len < COMMAND_LINE_LENGTH {
+        let len = shell.len;
+        shell.line[len] = byte;
+        shell.len = len + 1;
+    }
+}
+
+pub fn pop_char(id: usize) -> bool {
+    let mut shell = SHELLS[id].lock();
+    if shell.state == State::Waiting && shell.len > 0 {
+        shell.len -= 1;
+        let len = shell.len;
+        shell.line[len] = b'\0';
+        true
+    } else {
+        false
+    }
+}
+
+pub fn submit(id: usize) {
     let mut shell = SHELLS[id].lock();
     if shell.state == State::Waiting {
-        shell.input_line(line);
         shell.state = State::Ready;
     }
 }
@@ -169,13 +186,14 @@ pub fn interpret(id: usize) {
 
     if state == State::Ready {
         execute_command(&line);
+        {
+            let mut shell = SHELLS[id].lock();
+            shell.line = [b'\0'; COMMAND_LINE_LENGTH];
+            shell.len = 0;
+            shell.state = State::Waiting;
+        }
         output_prompt();
-        SHELLS[id].lock().state = State::Waiting;
     }
-}
-
-pub const fn ps1() -> &'static str {
-    PS1
 }
 
 // termcaps: not implemented yet

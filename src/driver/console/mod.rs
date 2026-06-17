@@ -3,7 +3,7 @@ mod history;
 use super::{
     shell,
     vga::{
-        BUFFER_HEIGHT, BUFFER_WIDTH, Color, ColorCode, Line, ScreenChar,
+        BUFFER_HEIGHT, BUFFER_WIDTH, Color, ColorCode, ScreenChar,
         text_mode::{Writer, set_cursor},
     },
 };
@@ -128,8 +128,7 @@ impl Console {
                 if self.history.end_line().is_ok() {
                     self.update_screen();
                 }
-                let line = self.get_current_line();
-                shell::add_line_to_buf(self.id, &line);
+                shell::submit(self.id);
                 self.new_line();
             }
             b'\t' => self.write_string("    "),
@@ -248,8 +247,13 @@ impl Console {
         if self.history.end_line().is_ok() {
             self.update_screen();
         }
-        if self.descriptors[self.id].column_position > shell::ps1().len() {
-            self.descriptors[self.id].column_position -= 1;
+        if shell::pop_char(self.id) {
+            if self.descriptors[self.id].column_position > 0 {
+                self.descriptors[self.id].column_position -= 1;
+            } else if self.descriptors[self.id].row_position > 0 {
+                self.descriptors[self.id].row_position -= 1;
+                self.descriptors[self.id].column_position = BUFFER_WIDTH - 1;
+            }
             self.write_ascii(b' ');
             self.update_cursor();
         }
@@ -266,9 +270,10 @@ impl Console {
         if self.history.end_line().is_ok() {
             self.update_screen();
         }
-        if self.descriptors[self.id].column_position + 1 < BUFFER_WIDTH {
-            self.write_ascii(byte);
-            self.descriptors[self.id].column_position += 1;
+        self.write_ascii(byte);
+        self.descriptors[self.id].column_position += 1;
+        if self.descriptors[self.id].column_position >= BUFFER_WIDTH {
+            self.new_line();
         }
         self.update_cursor();
     }
@@ -284,20 +289,6 @@ impl Console {
 
         self.writer.set_char(&c, col, row);
         self.history.set_char(c, col, row);
-    }
-
-    fn get_current_line(&self) -> Line {
-        let mut new_line = [0u8; BUFFER_WIDTH];
-        if let Ok(line) = self
-            .history
-            .get_line(self.descriptors[self.id].row_position)
-        {
-            for (new_char, screen_char) in new_line.iter_mut().zip(line.iter()) {
-                *new_char = screen_char.ascii_character;
-            }
-        }
-
-        new_line
     }
 
     fn new_line(&mut self) {
