@@ -98,11 +98,11 @@ impl Keyboard {
     fn interpret_keymapvalue(&mut self, keymap_value: KeymapValue, pressed: bool) {
         match keymap_value {
             KeymapValue::Ascii(c) | KeymapValue::Lowercase(c) | KeymapValue::Alt(c) if pressed => {
-                print!("{c}");
+                console::push_keyboard_byte(c as u8);
             }
             KeymapValue::Control(c) | KeymapValue::ControlAlt(c) if pressed => {
-                let c = ((c as u8) & 0x3F) as char;
-                print!("{c}");
+                let c = (c as u8) & 0x3F;
+                console::push_keyboard_byte(c);
             }
             KeymapValue::CapsLock if pressed => {
                 self.key_modifier.caps_lock = !self.key_modifier.caps_lock;
@@ -120,7 +120,7 @@ impl Keyboard {
             KeymapValue::RightShift => self.key_modifier.right_shift = pressed,
             KeymapValue::RightAlt => self.key_modifier.alt_gr = pressed,
             KeymapValue::Delete if pressed => {
-                print!("{}", 0x7Fu8 as char);
+                console::push_keyboard_byte(0x08);
             }
             KeymapValue::Right | KeymapValue::AltRight | KeymapValue::ControlRight if pressed => {
                 print!("{CURSOR_RIGHT}");
