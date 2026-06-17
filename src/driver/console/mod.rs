@@ -3,7 +3,7 @@ mod history;
 use super::{
     shell,
     vga::{
-        BUFFER_HEIGHT, BUFFER_WIDTH, Color, ColorCode, Line, ScreenChar,
+        BUFFER_HEIGHT, BUFFER_WIDTH, Color, ColorCode, ScreenChar,
         text_mode::{Writer, set_cursor},
     },
 };
@@ -17,6 +17,7 @@ const DEFAULT_FOREFROUND_COLOR: Color = Color::LightGray;
 const DEFAULT_BACKFROUND_COLOR: Color = Color::Black;
 const DEFAULT_COLOR_CODE: ColorCode =
     ColorCode::new(DEFAULT_FOREFROUND_COLOR, DEFAULT_BACKFROUND_COLOR);
+pub const INPUT_BUFFER_SIZE: usize = 4096;
 
 // https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
 // escape sequences:
@@ -78,6 +79,8 @@ struct ConsoleDescriptor {
     row_position: usize,
     column_position: usize,
     color_code: ColorCode,
+    input_buffer: [u8; INPUT_BUFFER_SIZE],
+    input_length: usize,
 }
 
 impl ConsoleDescriptor {
@@ -86,17 +89,20 @@ impl ConsoleDescriptor {
             row_position: 0,
             column_position: 0,
             color_code: DEFAULT_COLOR_CODE,
+            input_buffer: [0; INPUT_BUFFER_SIZE],
+            input_length: 0,
         }
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 enum CsiParam {
     Undefined,
     Defined(u32),
     Invalid,
 }
 
+#[derive(PartialEq)]
 enum EscapeState {
     Normal,
     Esc,
@@ -112,6 +118,7 @@ struct Console {
 }
 
 impl Console {
+    #[allow(clippy::large_stack_arrays)]
     const fn new() -> Self {
         Self {
             escape_state: EscapeState::Normal,
@@ -122,21 +129,82 @@ impl Console {
         }
     }
 
-    fn apply_byte(&mut self, byte: u8) {
+    pub fn handle_keyboard_input(&mut self, byte: u8) {
         match byte {
             b'\n' | b'\r' => {
                 if self.history.end_line().is_ok() {
                     self.update_screen();
                 }
-                let line = self.get_current_line();
-                shell::add_line_to_buf(self.id, &line);
+
+                let desc = &mut self.descriptors[self.id];
+                let input = &desc.input_buffer[..desc.input_length];
+
+                crate::driver::shell::add_line_to_buf(self.id, input);
+                self.descriptors[self.id].input_length = 0;
                 self.new_line();
             }
-            b'\t' => self.write_string("    "),
-            0x08 => self.backspace(),
-            0x7F => self.delete(),
-            0x1B => self.escape_state = EscapeState::Esc,
-            byte @ b' '..=b'~' => self.apply_escape_byte(byte),
+            0x08 | 0x7F => {
+                let desc = &mut self.descriptors[self.id];
+
+                if desc.input_length > 0 {
+                    desc.input_length -= 1;
+
+                    if desc.column_position > 0 {
+                        desc.column_position -= 1;
+                    } else if desc.row_position > 0 {
+                        desc.row_position -= 1;
+                        desc.column_position = BUFFER_WIDTH - 1;
+                    }
+
+                    let col = desc.column_position;
+                    let row = desc.row_position;
+                    let blank = ScreenChar {
+                        ascii_character: b' ',
+                        color_code: desc.color_code,
+                    };
+                    self.writer.set_char(&blank, col, row);
+                    self.history.set_char(blank, col, row);
+                    self.update_cursor();
+                }
+            }
+            byte @ b' '..=b'~' => {
+                let desc = &mut self.descriptors[self.id];
+                if desc.input_length < INPUT_BUFFER_SIZE {
+                    desc.input_buffer[desc.input_length] = byte;
+                    desc.input_length += 1;
+                    self.write_byte(byte);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn apply_byte(&mut self, byte: u8) {
+        match byte {
+            b'\n' | b'\r' => {
+                self.new_line();
+                return;
+            }
+            b'\t' => {
+                self.write_string("    ");
+                return;
+            }
+            0x08 | 0x7F => {
+                self.backspace();
+                return;
+            }
+            0x1B => {
+                self.escape_state = EscapeState::Esc;
+                return;
+            }
+            _ => {}
+        }
+        if self.escape_state != EscapeState::Normal {
+            self.apply_escape_byte(byte);
+            return;
+        }
+        match byte {
+            byte @ b' '..=b'~' => self.write_byte(byte),
             _ => self.write_byte(0xFE),
         }
     }
@@ -248,27 +316,40 @@ impl Console {
         if self.history.end_line().is_ok() {
             self.update_screen();
         }
-        if self.descriptors[self.id].column_position > shell::ps1().len() {
-            self.descriptors[self.id].column_position -= 1;
-            self.write_ascii(b' ');
+
+        let desc = &mut self.descriptors[self.id];
+
+        if desc.input_length > 0 {
+            desc.input_length -= 1;
+            if desc.column_position > 0 {
+                desc.column_position -= 1;
+            } else if desc.row_position > 0 {
+                desc.row_position -= 1;
+                desc.column_position = BUFFER_WIDTH - 1;
+            }
+            let col = desc.column_position;
+            let row = desc.row_position;
+            let blank = ScreenChar {
+                ascii_character: b' ',
+                color_code: desc.color_code,
+            };
+            self.writer.set_char(&blank, col, row);
+            self.history.set_char(blank, col, row);
             self.update_cursor();
         }
-    }
-
-    fn delete(&mut self) {
-        if self.history.end_line().is_ok() {
-            self.update_screen();
-        }
-        self.write_ascii(b' ');
     }
 
     fn write_byte(&mut self, byte: u8) {
         if self.history.end_line().is_ok() {
             self.update_screen();
         }
-        if self.descriptors[self.id].column_position + 1 < BUFFER_WIDTH {
-            self.write_ascii(byte);
-            self.descriptors[self.id].column_position += 1;
+        if self.descriptors[self.id].column_position >= BUFFER_WIDTH {
+            self.new_line();
+        }
+        self.write_ascii(byte);
+        self.descriptors[self.id].column_position += 1;
+        if self.descriptors[self.id].column_position >= BUFFER_WIDTH {
+            self.new_line();
         }
         self.update_cursor();
     }
@@ -284,20 +365,6 @@ impl Console {
 
         self.writer.set_char(&c, col, row);
         self.history.set_char(c, col, row);
-    }
-
-    fn get_current_line(&self) -> Line {
-        let mut new_line = [0u8; BUFFER_WIDTH];
-        if let Ok(line) = self
-            .history
-            .get_line(self.descriptors[self.id].row_position)
-        {
-            for (new_char, screen_char) in new_line.iter_mut().zip(line.iter()) {
-                *new_char = screen_char.ascii_character;
-            }
-        }
-
-        new_line
     }
 
     fn new_line(&mut self) {
@@ -448,6 +515,10 @@ pub fn change_tty_id(id: usize) {
 
 pub fn get_tty_id() -> usize {
     WRITER.lock().get_tty_id()
+}
+
+pub fn push_keyboard_byte(byte: u8) {
+    WRITER.lock().handle_keyboard_input(byte);
 }
 
 pub fn test_colors() {

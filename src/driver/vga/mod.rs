@@ -48,4 +48,3 @@ pub struct ScreenChar {
 
 pub type ScreenCharLine = [ScreenChar; BUFFER_WIDTH];
 pub type Screen = [ScreenCharLine; BUFFER_HEIGHT];
-pub type Line = [u8; BUFFER_WIDTH];

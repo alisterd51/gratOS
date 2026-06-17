@@ -1,12 +1,11 @@
 mod debug;
 mod hexdump;
 
-use super::{
-    console::{self, NUMBER_OF_REGULAR_TTY},
-    vga::{BUFFER_WIDTH, Line},
-};
+use super::console::{self, NUMBER_OF_REGULAR_TTY};
 use crate::{
-    bootprotocol, gdt, memory,
+    bootprotocol,
+    driver::console::INPUT_BUFFER_SIZE,
+    gdt, memory,
     mutex::Mutex,
     power::{halt, reboot, shutdown},
     print, println,
@@ -28,15 +27,12 @@ impl State {
     }
 }
 
-fn parse_command(line: &Line) -> Option<&str> {
-    let line = &line[PS1.len()..];
-    let end = line.iter().position(|&c| c == b'\0').unwrap_or(line.len());
-    let command = &line[..end];
-    core::str::from_utf8(command).ok().map(str::trim)
+fn parse_command(buffer: &[u8]) -> Option<&str> {
+    core::str::from_utf8(buffer).ok().map(str::trim)
 }
 
-fn execute_command(line: &Line) {
-    if let Some(command) = parse_command(line) {
+fn execute_command(buffer: &[u8]) {
+    if let Some(command) = parse_command(buffer) {
         let mut parts = command.split_whitespace();
         let command = parts.next().unwrap_or("");
         let arg = parts.next();
@@ -114,7 +110,7 @@ fn execute_command(line: &Line) {
                 asm!("ud2", options(nomem, nostack));
             },
             "" => {}
-            _ => println!("command not found"),
+            cmd => println!("command not found: {cmd}"),
         }
     }
 }
@@ -122,19 +118,27 @@ fn execute_command(line: &Line) {
 #[derive(Clone, Copy)]
 struct Shell {
     state: State,
-    line: Line,
+    line_buffer: [u8; INPUT_BUFFER_SIZE],
+    line_len: usize,
 }
 
 impl Shell {
     const fn new() -> Self {
         Self {
             state: State::new(),
-            line: [b'\0'; BUFFER_WIDTH],
+            line_buffer: [b'\0'; INPUT_BUFFER_SIZE],
+            line_len: 0,
         }
     }
 
-    const fn input_line(&mut self, line: &Line) {
-        self.line = *line;
+    fn input_line(&mut self, line: &[u8]) {
+        let len = line.len().min(INPUT_BUFFER_SIZE);
+        let mut i = 0;
+        while i < len {
+            self.line_buffer[i] = line[i];
+            i += 1;
+        }
+        self.line_len = len;
     }
 }
 
@@ -147,14 +151,16 @@ fn output_prompt() {
 
 pub fn initialize(id: usize) {
     let mut shell = SHELLS[id].lock();
+
     if shell.state == State::Uninitialized {
         output_prompt();
         shell.state = State::Waiting;
     }
 }
 
-pub fn add_line_to_buf(id: usize, line: &Line) {
+pub fn add_line_to_buf(id: usize, line: &[u8]) {
     let mut shell = SHELLS[id].lock();
+
     if shell.state == State::Waiting {
         shell.input_line(line);
         shell.state = State::Ready;
@@ -162,20 +168,27 @@ pub fn add_line_to_buf(id: usize, line: &Line) {
 }
 
 pub fn interpret(id: usize) {
-    let (state, line) = {
+    let mut local_buffer = [0u8; INPUT_BUFFER_SIZE];
+    let local_len;
+    let state;
+
+    {
         let shell = SHELLS[id].lock();
-        (shell.state, shell.line)
-    };
+        state = shell.state;
+        local_len = shell.line_len;
+
+        let mut i = 0;
+        while i < local_len {
+            local_buffer[i] = shell.line_buffer[i];
+            i += 1;
+        }
+    }
 
     if state == State::Ready {
-        execute_command(&line);
+        execute_command(&local_buffer[..local_len]);
         output_prompt();
         SHELLS[id].lock().state = State::Waiting;
     }
-}
-
-pub const fn ps1() -> &'static str {
-    PS1
 }
 
 // termcaps: not implemented yet
