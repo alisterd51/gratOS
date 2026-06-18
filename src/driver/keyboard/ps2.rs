@@ -1,6 +1,4 @@
-#[cfg(feature = "azerty")]
 use super::keymaps::fr_azerty::FR_AZERTY_KEYMAP;
-#[cfg(not(feature = "azerty"))]
 use super::keymaps::us_qwerty::US_QUERTY_KEYMAP;
 use super::{
     fifo_buffer::FifoBuffer,
@@ -71,12 +69,17 @@ impl Keyboard {
         Self {
             buffer: FifoBuffer::new(),
             key_modifier: KeyModifier::new(),
-            #[cfg(not(feature = "azerty"))]
             keymap: &US_QUERTY_KEYMAP,
-            #[cfg(feature = "azerty")]
-            keymap: &FR_AZERTY_KEYMAP,
             scan_code_set: ScanCodeSet::new(),
         }
+    }
+
+    pub fn set_azerty(&mut self) {
+        self.keymap = &FR_AZERTY_KEYMAP;
+    }
+
+    pub fn set_qwerty(&mut self) {
+        self.keymap = &US_QUERTY_KEYMAP;
     }
 
     pub fn get_input(&mut self) {

@@ -5,8 +5,6 @@ BOOTLOADER	:= grub
 # BOOTLOADER	:= limine
 BOOTPROTOCOL	:= multiboot
 # BOOTPROTOCOL	:= multiboot2
-KEYMAP	:= qwerty
-# KEYMAP	:= azerty
 
 # utlis
 CARGO	:= cargo
@@ -19,11 +17,8 @@ GRUBCFG		:= boot/grub-${BOOTPROTOCOL}.cfg
 LIMINECONF	:= boot/limine-${BOOTPROTOCOL}.conf
 
 # flags
-ifeq (${KEYMAP},azerty)
-KEYMAPFEATURE	:= ,azerty
-endif
-CARGOFLAGS.debug	:= --features=${BOOTPROTOCOL}${KEYMAPFEATURE}
-CARGOFLAGS.release	:= --features=${BOOTPROTOCOL}${KEYMAPFEATURE} --release
+CARGOFLAGS.debug	:= --features=${BOOTPROTOCOL}
+CARGOFLAGS.release	:= --features=${BOOTPROTOCOL} --release
 
 # dirs
 BUILDDIR	:= build/${BUILD}

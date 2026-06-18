@@ -6,7 +6,9 @@ use super::{
     vga::{BUFFER_WIDTH, Line},
 };
 use crate::{
-    bootprotocol, gdt, memory,
+    bootprotocol,
+    driver::keyboard::ps2::KEYBOARD,
+    gdt, memory,
     mutex::Mutex,
     power::{halt, reboot, shutdown},
     print, println,
@@ -61,7 +63,9 @@ fn execute_command(line: &Line) {
                 \tshutdown\n\
                 \ttest_colors\n\
                 \ttest_page_fault\n\
-                \ttest_invalid_opcode"
+                \ttest_invalid_opcode\n\
+                \tazerty\n\
+                \tqwerty"
             ),
             "halt" => halt::halt(),
             "panic" => panic!(),
@@ -113,6 +117,14 @@ fn execute_command(line: &Line) {
             "test_invalid_opcode" => unsafe {
                 asm!("ud2", options(nomem, nostack));
             },
+            "azerty" => {
+                KEYBOARD.lock().set_azerty();
+                println!("Keyboard layout set to AZERTY (fr)");
+            }
+            "qwerty" => {
+                KEYBOARD.lock().set_qwerty();
+                println!("Keyboard layout set to US QWERTY");
+            }
             "" => {}
             _ => println!("command not found"),
         }

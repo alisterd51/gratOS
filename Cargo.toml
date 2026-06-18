@@ -43,5 +43,3 @@ unwrap_used = "deny"
 default = []
 multiboot = []
 multiboot2 = []
-# To use the french "azerty" keyboard layout instead of the default us qwerty
-azerty = []
