@@ -314,7 +314,7 @@ pub const FR_AZERTY_KEYMAP: Keymap = {
         alt_shift: KeymapValue::Alt('+'),
         ctrl: KeymapValue::Control('@'),
     });
-    // Ponctuation 
+    // Ponctuation
     keymap[ScanCodeValue::LeftSquareBracket as usize] = Some(KeymapSet {
         // ^ dead key (¨ shifted) ASCII fallback '^'
         not_shift: KeymapValue::Ascii('^'),
