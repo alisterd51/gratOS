@@ -10,7 +10,7 @@ jobs:
   fmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
       - name: cargo fmt
         run: |
           cargo fmt --check
@@ -18,7 +18,7 @@ jobs:
   fix:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
       - name: cargo fix
         run: |
           cargo fix --all-features
@@ -31,7 +31,7 @@ jobs:
   clippy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
       - name: cargo clippy
         run: |
           cargo clippy --all-features
@@ -52,7 +52,7 @@ jobs:
           - multiboot2
     container: ghcr.io/alisterd51/cross-toolchain:nightly
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
       - name: Build ${{ matrix.build }}, ${{ matrix.bootprotocol }}
         run: |
           make all BUILD=${{ matrix.build }} BOOTPROTOCOL=${{ matrix.bootprotocol }}
