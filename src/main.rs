@@ -17,9 +17,10 @@ use crate::{
     driver::{
         console::{self, FG_RED, FG_RESET, RESET},
         keyboard::ps2::KEYBOARD,
-        pic, shell,
+        pic,
+        shell::{self, debug::print_stack},
     },
-    power::halt,
+    power::{clean_registers::clean_registers, halt},
 };
 use core::{
     arch::{asm, global_asm},
@@ -30,7 +31,11 @@ use core::{
 fn panic(info: &PanicInfo) -> ! {
     println!("{RESET}{FG_RED}");
     println!("{info}");
+    print_stack(128);
     print!("{FG_RESET}");
+    unsafe {
+        clean_registers();
+    }
     halt::halt();
 }
 

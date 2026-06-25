@@ -1,4 +1,4 @@
-mod debug;
+pub mod debug;
 mod hexdump;
 
 use super::console::{self, NUMBER_OF_REGULAR_TTY};
