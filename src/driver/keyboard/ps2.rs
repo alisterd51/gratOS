@@ -1,6 +1,6 @@
 use super::{
     fifo_buffer::FifoBuffer,
-    keymaps::{Keymap, KeymapValue, us_qwerty::US_QUERTY_KEYMAP},
+    keymaps::{Keymap, KeymapValue, fr_azerty::FR_AZERTY_KEYMAP, us_qwerty::US_QUERTY_KEYMAP},
 };
 use crate::{
     driver::{
@@ -70,6 +70,14 @@ impl Keyboard {
             keymap: &US_QUERTY_KEYMAP,
             scan_code_set: ScanCodeSet::new(),
         }
+    }
+
+    pub const fn set_azerty(&mut self) {
+        self.keymap = &FR_AZERTY_KEYMAP;
+    }
+
+    pub const fn set_qwerty(&mut self) {
+        self.keymap = &US_QUERTY_KEYMAP;
     }
 
     pub fn get_input(&mut self) {

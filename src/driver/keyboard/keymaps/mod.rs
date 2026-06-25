@@ -1,3 +1,4 @@
+pub mod fr_azerty;
 pub mod us_qwerty;
 
 pub type Keymap = [Option<KeymapSet>; 0x80];
