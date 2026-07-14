@@ -58,65 +58,63 @@ pub extern "C" fn interrupt_dispatcher(frame: &mut InterruptFrame) {
                 }
             }
 
-            if frame.interrupt_number == 14 {
-                panic!(
-                    "KERNEL OOPS: {} ({})\n\
-                    Faulting Address (CR2): 0x{:08X}\n\
-                    Error Code: 0x{:08X}\n\
-                    --- Registers ---\n\
-                    EAX: 0x{:08X}  EBX: 0x{:08X}  ECX: 0x{:08X}  EDX: 0x{:08X}\n\
-                    ESI: 0x{:08X}  EDI: 0x{:08X}  EBP: 0x{:08X}  ESP: 0x{:08X}\n\
-                    EIP: 0x{:08X}  EFLAGS: 0x{:08X}\n\
-                    CS:  0x{:04X}  DS:  0x{:04X}  ES:  0x{:04X}  FS:  0x{:04X}  GS:  0x{:04X}",
-                    frame.interrupt_number,
-                    exception_name,
-                    cr2,
-                    frame.error_code,
-                    frame.eax,
-                    frame.ebx,
-                    frame.ecx,
-                    frame.edx,
-                    frame.esi,
-                    frame.edi,
-                    frame.ebp,
-                    frame.esp_dummy,
-                    frame.eip,
-                    frame.eflags,
-                    frame.cs,
-                    frame.ds,
-                    frame.es,
-                    frame.fs,
-                    frame.gs
-                );
-            } else {
-                panic!(
-                    "KERNEL OOPS: {} ({})\n\
-                    Error Code: 0x{:08X}\n\
-                    --- Registers ---\n\
-                    EAX: 0x{:08X}  EBX: 0x{:08X}  ECX: 0x{:08X}  EDX: 0x{:08X}\n\
-                    ESI: 0x{:08X}  EDI: 0x{:08X}  EBP: 0x{:08X}  ESP: 0x{:08X}\n\
-                    EIP: 0x{:08X}  EFLAGS: 0x{:08X}\n\
-                    CS:  0x{:04X}  DS:  0x{:04X}  ES:  0x{:04X}  FS:  0x{:04X}  GS:  0x{:04X}",
-                    frame.interrupt_number,
-                    exception_name,
-                    frame.error_code,
-                    frame.eax,
-                    frame.ebx,
-                    frame.ecx,
-                    frame.edx,
-                    frame.esi,
-                    frame.edi,
-                    frame.ebp,
-                    frame.esp_dummy,
-                    frame.eip,
-                    frame.eflags,
-                    frame.cs,
-                    frame.ds,
-                    frame.es,
-                    frame.fs,
-                    frame.gs
-                );
-            }
+            assert!(
+                frame.interrupt_number != 14,
+                "KERNEL OOPS: {} ({})\n\
+                Faulting Address (CR2): 0x{:08X}\n\
+                Error Code: 0x{:08X}\n\
+                --- Registers ---\n\
+                EAX: 0x{:08X}  EBX: 0x{:08X}  ECX: 0x{:08X}  EDX: 0x{:08X}\n\
+                ESI: 0x{:08X}  EDI: 0x{:08X}  EBP: 0x{:08X}  ESP: 0x{:08X}\n\
+                EIP: 0x{:08X}  EFLAGS: 0x{:08X}\n\
+                CS:  0x{:04X}  DS:  0x{:04X}  ES:  0x{:04X}  FS:  0x{:04X}  GS:  0x{:04X}",
+                frame.interrupt_number,
+                exception_name,
+                cr2,
+                frame.error_code,
+                frame.eax,
+                frame.ebx,
+                frame.ecx,
+                frame.edx,
+                frame.esi,
+                frame.edi,
+                frame.ebp,
+                frame.esp_dummy,
+                frame.eip,
+                frame.eflags,
+                frame.cs,
+                frame.ds,
+                frame.es,
+                frame.fs,
+                frame.gs
+            );
+            panic!(
+                "KERNEL OOPS: {} ({})\n\
+                Error Code: 0x{:08X}\n\
+                --- Registers ---\n\
+                EAX: 0x{:08X}  EBX: 0x{:08X}  ECX: 0x{:08X}  EDX: 0x{:08X}\n\
+                ESI: 0x{:08X}  EDI: 0x{:08X}  EBP: 0x{:08X}  ESP: 0x{:08X}\n\
+                EIP: 0x{:08X}  EFLAGS: 0x{:08X}\n\
+                CS:  0x{:04X}  DS:  0x{:04X}  ES:  0x{:04X}  FS:  0x{:04X}  GS:  0x{:04X}",
+                frame.interrupt_number,
+                exception_name,
+                frame.error_code,
+                frame.eax,
+                frame.ebx,
+                frame.ecx,
+                frame.edx,
+                frame.esi,
+                frame.edi,
+                frame.ebp,
+                frame.esp_dummy,
+                frame.eip,
+                frame.eflags,
+                frame.cs,
+                frame.ds,
+                frame.es,
+                frame.fs,
+                frame.gs
+            );
         }
         32 => send_eoi(0),
         33 => {
