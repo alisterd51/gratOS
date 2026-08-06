@@ -1,4 +1,8 @@
-use crate::memory::{PMM, PhysAddr, PhysFrame, VirtAddr, allocate_frame};
+use crate::memory::{
+    VirtAddr,
+    address::{PhysAddr, PhysFrame},
+    pmm::{PMM, allocate_frame},
+};
 use core::{
     arch::asm,
     ops::{BitOr, BitOrAssign},
@@ -69,14 +73,10 @@ impl PageTableEntry {
     }
 
     pub fn frame(self) -> Option<PhysFrame> {
-        if self.is_present() {
+        self.is_present().then(|| {
             let frame_address = self.0 & PAGE_MASK;
-            Some(PhysFrame::containing_address(PhysAddr(u64::from(
-                frame_address,
-            ))))
-        } else {
-            None
-        }
+            PhysFrame::containing_address(PhysAddr(u64::from(frame_address)))
+        })
     }
 
     #[allow(clippy::cast_possible_truncation)]
@@ -198,9 +198,7 @@ pub unsafe fn unmap_page(virt_addr: VirtAddr) {
     let pte_index = virt_addr.pte_index();
     let table_vaddr = resolve_table_vaddr(virt_addr, table_frame);
 
-    unsafe {
-        (*table_vaddr).entries[pte_index] = PageTableEntry::empty();
-    }
+    unsafe { (*table_vaddr).entries[pte_index] = PageTableEntry::empty() };
     flush_tlb(virt_addr.0);
 
     let is_table_empty = unsafe {
@@ -231,7 +229,7 @@ pub fn is_page_mapped(virt_addr: VirtAddr) -> bool {
     })
 }
 
-pub unsafe fn setup_recursive_paging() {
+pub unsafe fn setup_recursive() {
     let pd_phys_addr = get_page_directory_address();
     let pd_frame = PhysFrame::containing_address(PhysAddr(u64::from(pd_phys_addr)));
     let recursive_entry = unsafe { &mut KERNEL_PAGE_DIRECTORY.entries[RECURSIVE_INDEX] };
@@ -249,7 +247,7 @@ pub unsafe fn load_page_directory(phys_addr: u32) {
     }
 }
 
-pub unsafe fn enable_paging() {
+pub unsafe fn enable() {
     let mut cr0: u32;
 
     unsafe {

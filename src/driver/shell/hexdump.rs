@@ -1,4 +1,7 @@
-use crate::{memory::paging::is_page_mapped, print, println};
+use crate::{
+    memory::{self, paging::is_page_mapped},
+    print, println,
+};
 use core::ptr::read_volatile;
 
 const fn is_printable(c: u8) -> bool {
@@ -7,12 +10,9 @@ const fn is_printable(c: u8) -> bool {
 
 #[allow(clippy::cast_possible_truncation)]
 fn safe_read_byte(addr: usize) -> Option<u8> {
-    let virt_addr = crate::memory::VirtAddr(addr as u32);
-    if is_page_mapped(virt_addr) {
-        Some(unsafe { read_volatile(addr as *const u8) })
-    } else {
-        None
-    }
+    let virt_addr = memory::VirtAddr(addr as u32);
+
+    is_page_mapped(virt_addr).then(|| unsafe { read_volatile(addr as *const u8) })
 }
 
 fn print_hex(data: &[Option<u8>]) {
