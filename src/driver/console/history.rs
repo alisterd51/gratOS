@@ -1,6 +1,8 @@
-use super::{DEFAULT_COLOR_CODE, HISTORY_BUFFER_HEIGHT, NUMBER_OF_REGULAR_TTY};
 use crate::{
-    driver::vga::{BUFFER_HEIGHT, BUFFER_WIDTH, Screen, ScreenChar, ScreenCharLine},
+    driver::{
+        console::{DEFAULT_COLOR_CODE, HISTORY_BUFFER_HEIGHT, NUMBER_OF_REGULAR_TTY},
+        vga::{BUFFER_HEIGHT, BUFFER_WIDTH, Screen, ScreenChar, ScreenCharLine},
+    },
     mutex::Mutex,
 };
 

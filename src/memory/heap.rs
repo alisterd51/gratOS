@@ -1,8 +1,10 @@
 use crate::{
     memory::{
-        PAGE_SIZE, PMM, PhysAddr, PhysFrame, VirtAddr, allocate_frame,
-        allocator::ALLOCATOR,
+        VirtAddr,
+        address::{PAGE_SIZE, PhysAddr, PhysFrame},
+        allocator::{ALLOCATOR, align_up},
         paging::{self, PageTableFlags},
+        pmm::{PMM, allocate_frame},
     },
     mutex::Mutex,
 };
@@ -30,14 +32,10 @@ pub fn init() {
         let phys_addr = frame.start_address();
         let virt_addr = VirtAddr((page * PAGE_SIZE) as u32);
 
-        unsafe {
-            paging::map_page(virt_addr, phys_addr, flags);
-        }
+        unsafe { paging::map_page(virt_addr, phys_addr, flags) };
     }
 
-    unsafe {
-        ALLOCATOR.lock().init(HEAP_START, HEAP_SIZE);
-    }
+    unsafe { ALLOCATOR.lock().init(HEAP_START, HEAP_SIZE) };
 }
 
 #[allow(clippy::cast_possible_truncation)]
@@ -46,7 +44,7 @@ pub fn sbrk(increment: usize) -> Option<(usize, usize)> {
         return None;
     }
 
-    let aligned_increment = crate::memory::allocator::align_up(increment, PAGE_SIZE);
+    let aligned_increment = align_up(increment, PAGE_SIZE);
     let old_end = HEAP_CURRENT_END.fetch_add(aligned_increment, Ordering::SeqCst);
     let new_end = old_end + aligned_increment;
     let start_page = old_end / PAGE_SIZE;
@@ -58,9 +56,7 @@ pub fn sbrk(increment: usize) -> Option<(usize, usize)> {
         let phys_addr = frame.start_address();
         let virt_addr = VirtAddr((page * PAGE_SIZE) as u32);
 
-        unsafe {
-            paging::map_page(virt_addr, phys_addr, flags);
-        }
+        unsafe { paging::map_page(virt_addr, phys_addr, flags) };
     }
 
     Some((old_end, aligned_increment))
@@ -111,15 +107,13 @@ pub fn dma_alloc(size_in_bytes: usize) -> Option<(usize, u64)> {
     for i in 0..pages_needed {
         let virt = VirtAddr((vaddr_start + i * PAGE_SIZE) as u32);
         let phys = PhysAddr(phys_base_addr + (i * PAGE_SIZE) as u64);
-        unsafe {
-            paging::map_page(virt, phys, flags);
-        }
+        unsafe { paging::map_page(virt, phys, flags) };
     }
 
     Some((vaddr_start, phys_base_addr))
 }
 
-fn coalesce_dma_ranges(ranges: &mut alloc::vec::Vec<(usize, usize)>) {
+fn coalesce_dma_ranges(ranges: &mut Vec<(usize, usize)>) {
     if ranges.len() < 2 {
         return;
     }
@@ -164,9 +158,7 @@ pub fn dma_free(virt_base_addr: usize, phys_base_addr: u64, size_in_bytes: usize
     }
 
     for i in 0..pages_to_free {
-        unsafe {
-            paging::unmap_page(VirtAddr((virt_base_addr + i * PAGE_SIZE) as u32));
-        }
+        unsafe { paging::unmap_page(VirtAddr((virt_base_addr + i * PAGE_SIZE) as u32)) };
     }
 
     {

@@ -3,6 +3,7 @@ use core::{
     cell::UnsafeCell,
     ffi::{CStr, c_char},
     fmt,
+    ptr::read_unaligned,
 };
 
 // https://www.gnu.org/software/grub/manual/multiboot/multiboot.html#Boot-information-format
@@ -41,6 +42,7 @@ struct MultibootInfo {
     color_info_2: u16,       // (present if flags[12] is set)
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[repr(C, packed)]
 pub struct MultibootMemoryMapEntry {
     pub size: u32,
@@ -127,7 +129,7 @@ pub fn init(info_addr: u32) {
 
         while current_addr < end_addr && cache.memory_map_count < MAX_MEMORY_ENTRIES {
             let entry_ptr = current_addr as *const MultibootMemoryMapEntry;
-            let entry = unsafe { core::ptr::read_unaligned(entry_ptr) };
+            let entry = unsafe { read_unaligned(entry_ptr) };
 
             cache.memory_map[cache.memory_map_count] = MemoryMapEntry {
                 base_addr: entry.base_addr,

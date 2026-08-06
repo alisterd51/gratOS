@@ -1,4 +1,4 @@
-use crate::memory::PhysFrame;
+use crate::memory::address::PhysFrame;
 
 const MAX_FRAMES: usize = 1024 * 1024;
 const BITMAP_SIZE: usize = MAX_FRAMES / (usize::BITS as usize);
