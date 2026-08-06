@@ -36,13 +36,11 @@ pub fn send_eoi(irq: u8) {
             outb(PIC_EOI, PIC2_COMMAND);
         }
         outb(PIC_EOI, PIC1_COMMAND);
-    }
+    };
 }
 
 fn io_wait() {
-    unsafe {
-        outb(0, 0x80);
-    }
+    unsafe { outb(0, 0x80) };
 }
 
 fn remap(offset1: u8, offset2: u8) {
@@ -67,5 +65,5 @@ fn remap(offset1: u8, offset2: u8) {
 
         outb(0, PIC1_DATA);
         outb(0, PIC2_DATA);
-    }
+    };
 }

@@ -1,10 +1,10 @@
 use crate::{
-    memory::{PAGE_SIZE, heap::sbrk},
+    memory::{address::PAGE_SIZE, heap::sbrk},
     mutex::Mutex,
 };
 use core::{
-    alloc::GlobalAlloc,
-    ptr::null_mut,
+    alloc::{GlobalAlloc, Layout},
+    ptr::{from_mut, from_ref, null_mut},
     sync::atomic::{AtomicUsize, Ordering},
 };
 
@@ -27,7 +27,7 @@ impl ListNode {
     }
 
     fn start_addr(&self) -> usize {
-        core::ptr::from_ref::<Self>(self) as usize
+        from_ref::<Self>(self) as usize
     }
 
     fn end_addr(&self) -> usize {
@@ -69,11 +69,11 @@ impl LinkedListAllocator {
     }
 
     unsafe fn add_free_region(&mut self, addr: usize, size: usize) {
-        let aligned_addr = align_up(addr, core::mem::align_of::<ListNode>());
+        let aligned_addr = align_up(addr, align_of::<ListNode>());
         let padding = aligned_addr.saturating_sub(addr);
         let aligned_size = size.saturating_sub(padding);
 
-        if aligned_size < core::mem::size_of::<ListNode>() {
+        if aligned_size < size_of::<ListNode>() {
             return;
         }
 
@@ -95,7 +95,7 @@ impl LinkedListAllocator {
         unsafe {
             node_ptr.write(node);
             current.next = Some(&mut *node_ptr);
-        }
+        };
 
         self.coalesce();
     }
@@ -104,7 +104,7 @@ impl LinkedListAllocator {
         unsafe { self.add_free_region(heap_start, heap_size) };
     }
 
-    fn size_align(layout: core::alloc::Layout) -> (usize, usize) {
+    fn size_align(layout: Layout) -> (usize, usize) {
         let layout = layout
             .align_to(align_of::<ListNode>())
             .expect("Allocator alignment failed")
@@ -164,7 +164,7 @@ struct SlabNode {
     next: Option<&'static mut Self>,
 }
 
-fn list_index(layout: &core::alloc::Layout) -> Option<usize> {
+fn list_index(layout: &Layout) -> Option<usize> {
     let required_block_size = layout.size().max(layout.align());
 
     BLOCK_SIZES.iter().position(|&s| s >= required_block_size)
@@ -187,7 +187,7 @@ impl FixedSizeBlockAllocator {
         unsafe { self.fallback_allocator.init(heap_start, heap_size) };
     }
 
-    unsafe fn fallback_alloc(&mut self, layout: core::alloc::Layout) -> *mut u8 {
+    unsafe fn fallback_alloc(&mut self, layout: Layout) -> *mut u8 {
         let (size, align) = LinkedListAllocator::size_align(layout);
 
         if let Some(ptr) = unsafe { self.fallback_allocator.split_and_allocate(size, align) } {
@@ -208,17 +208,17 @@ impl FixedSizeBlockAllocator {
 }
 
 unsafe impl GlobalAlloc for Mutex<FixedSizeBlockAllocator> {
-    unsafe fn alloc(&self, layout: core::alloc::Layout) -> *mut u8 {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let mut allocator = self.lock();
         let ptr = match list_index(&layout) {
             Some(index) => {
                 if let Some(node) = allocator.list_heads[index].take() {
                     allocator.list_heads[index] = node.next.take();
-                    core::ptr::from_mut::<SlabNode>(node).cast::<u8>()
+                    from_mut::<SlabNode>(node).cast::<u8>()
                 } else {
                     let block_size = BLOCK_SIZES[index];
                     let chunk_size = PAGE_SIZE;
-                    let chunk_layout = core::alloc::Layout::from_size_align(chunk_size, block_size)
+                    let chunk_layout = Layout::from_size_align(chunk_size, block_size)
                         .expect("Invalid layout for the chunk");
                     let chunk_ptr = unsafe { allocator.fallback_alloc(chunk_layout) };
 
@@ -234,11 +234,12 @@ unsafe impl GlobalAlloc for Mutex<FixedSizeBlockAllocator> {
 
                     while current_addr + block_size <= end_addr {
                         let node_ptr = current_addr as *mut SlabNode;
+
                         unsafe {
                             node_ptr.write(SlabNode {
                                 next: allocator.list_heads[index].take(),
                             });
-                        }
+                        };
                         allocator.list_heads[index] = Some(unsafe { &mut *node_ptr });
 
                         current_addr += block_size;
@@ -258,7 +259,7 @@ unsafe impl GlobalAlloc for Mutex<FixedSizeBlockAllocator> {
     }
 
     #[allow(clippy::cast_ptr_alignment)]
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: core::alloc::Layout) {
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
         HEAP_USED_BYTES.fetch_sub(layout.size(), Ordering::Relaxed);
 
         let mut allocator = self.lock();
@@ -278,7 +279,7 @@ unsafe impl GlobalAlloc for Mutex<FixedSizeBlockAllocator> {
                 allocator
                     .fallback_allocator
                     .add_free_region(ptr as usize, size);
-            }
+            };
         }
     }
 }

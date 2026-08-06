@@ -11,7 +11,7 @@ pub unsafe fn inb(port: u16) -> u8 {
             out("al") value,
             in("dx") port
         );
-    }
+    };
     value
 }
 
@@ -23,7 +23,7 @@ pub unsafe fn outb(value: u8, port: u16) {
             in("al") value,
             in("dx") port
         );
-    }
+    };
 }
 
 #[allow(dead_code)]
@@ -34,5 +34,5 @@ pub unsafe fn outw(value: u16, port: u16) {
             in("ax") value,
             in("dx") port
         );
-    }
+    };
 }
