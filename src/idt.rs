@@ -139,10 +139,10 @@ pub fn init() {
         for (i, isr) in isrs.iter().enumerate() {
             (*idt_ptr).set_handler(i as u8, *isr as usize as u32);
         }
-    }
+    };
 
     let idtr = IdtDescriptor {
-        limit: (core::mem::size_of::<Idt>() - 1) as u16,
+        limit: (size_of::<Idt>() - 1) as u16,
         base: (&raw const IDT) as u32,
     };
 
@@ -152,5 +152,5 @@ pub fn init() {
             in(reg) &raw const idtr,
             options(nostack, preserves_flags)
         );
-    }
+    };
 }

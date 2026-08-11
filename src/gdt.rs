@@ -55,9 +55,9 @@ impl SegmentDescriptor {
 impl fmt::Display for SegmentDescriptor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let base = u32::from(self.base_low)
-            | u32::from(self.base_middle) << 16
-            | u32::from(self.base_high) << 24;
-        let limit = u32::from(self.limit_low) | (u32::from(self.granularity) & 0x0F) << 16;
+            | (u32::from(self.base_middle) << 16)
+            | (u32::from(self.base_high) << 24);
+        let limit = u32::from(self.limit_low) | ((u32::from(self.granularity) & 0x0F) << 16);
         let limit = if (self.granularity & 0x80) != 0 {
             (limit << 12) | 0xFFF
         } else {
@@ -87,7 +87,7 @@ static mut GDT: Gdt = Gdt([
 pub fn init() {
     let gdtr = GdtDescriptor {
         #[allow(clippy::cast_possible_truncation)]
-        limit: (core::mem::size_of::<Gdt>() - 1) as u16,
+        limit: (size_of::<Gdt>() - 1) as u16,
         base: (&raw const GDT) as u32,
     };
     unsafe {
@@ -117,7 +117,7 @@ pub fn init() {
             tmp = out(reg) _,
             options(nostack, preserves_flags)
         );
-    }
+    };
 }
 
 pub fn print() {
@@ -129,7 +129,7 @@ pub fn print() {
             in(reg) &raw mut gdtr,
             options(nostack, preserves_flags)
         );
-    }
+    };
     let base = gdtr.base;
     let limit = gdtr.limit;
     println!("gdt: base: {base:#010X}, limit: {limit:#010X}");

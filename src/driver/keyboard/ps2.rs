@@ -1,13 +1,13 @@
-use super::{
-    fifo_buffer::FifoBuffer,
-    keymaps::{Keymap, KeymapValue, us_qwerty::US_QUERTY_KEYMAP},
-};
 use crate::{
     driver::{
         console::{
             self, CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT, CURSOR_UP, SCROLL_DOWN, SCROLL_UP,
         },
-        keyboard::ScanCodeSet,
+        keyboard::{
+            fifo_buffer::FifoBuffer,
+            keymaps::{Keymap, KeymapValue, us_qwerty::US_QUERTY_KEYMAP},
+            scancode::ScanCodeSet,
+        },
     },
     io::inb,
     mutex::Mutex,

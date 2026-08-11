@@ -23,9 +23,7 @@ pub fn free_heap() {
 
 pub fn alloc_dma(size: usize) {
     if let Some((virt_base_addr, phys_base_addr)) = dma_alloc(size) {
-        unsafe {
-            write_bytes(virt_base_addr as *mut u8, b'B', size);
-        }
+        unsafe { write_bytes(virt_base_addr as *mut u8, b'B', size) };
 
         DMA_ALLOCS
             .lock()
@@ -42,9 +40,7 @@ pub fn free_dma() {
 pub fn print_stack(bytes: usize) {
     let stack_pointer: usize;
 
-    unsafe {
-        core::arch::asm!("mov {}, esp", out(reg) stack_pointer);
-    }
+    unsafe { core::arch::asm!("mov {}, esp", out(reg) stack_pointer) };
 
     let safe_bytes = bytes.min(1024);
 

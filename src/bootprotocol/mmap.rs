@@ -1,0 +1,56 @@
+use core::fmt;
+
+// https://www.gnu.org/software/grub/manual/multiboot/multiboot.html#Boot-information-format
+// https://uefi.org/htmlspecs/ACPI_Spec_6_4_html/15_System_Address_Map_Interfaces/Sys_Address_Map_Interfaces.html
+#[derive(PartialEq, Eq)]
+pub enum MemoryType {
+    Memory,           // 1
+    Reserved,         // 2
+    Acpi,             // 3
+    Nvs,              // 4
+    Unusable,         // 5
+    Disabled,         // 6
+    PersistentMemory, // 7
+    Undefined(u32),
+}
+
+#[derive(Clone, Copy)]
+pub struct MemoryMapEntry {
+    pub base_addr: u64,
+    pub length: u64,
+    pub entry_type: u32,
+}
+
+impl fmt::Display for MemoryMapEntry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "memory_map_entry: base_addr: {}, length: {}, entry_type: {}",
+            self.base_addr, self.length, self.entry_type
+        )
+    }
+}
+
+impl MemoryMapEntry {
+    #[allow(dead_code)]
+    pub const fn empty() -> Self {
+        Self {
+            base_addr: 0,
+            length: 0,
+            entry_type: 0,
+        }
+    }
+
+    pub const fn memory_type(&self) -> MemoryType {
+        match self.entry_type {
+            1 => MemoryType::Memory,
+            2 => MemoryType::Reserved,
+            3 => MemoryType::Acpi,
+            4 => MemoryType::Nvs,
+            5 => MemoryType::Unusable,
+            6 => MemoryType::Disabled,
+            7 => MemoryType::PersistentMemory,
+            other => MemoryType::Undefined(other),
+        }
+    }
+}

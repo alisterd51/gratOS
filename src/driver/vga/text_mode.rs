@@ -1,5 +1,7 @@
-use super::{BUFFER_WIDTH, Screen, ScreenChar, ScreenCharLine};
-use crate::io::outb;
+use crate::{
+    driver::vga::{BUFFER_WIDTH, Screen, ScreenChar, ScreenCharLine},
+    io::outb,
+};
 use core::ptr::write_volatile;
 
 #[repr(transparent)]

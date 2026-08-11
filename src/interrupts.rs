@@ -55,7 +55,7 @@ pub extern "C" fn interrupt_dispatcher(frame: &mut InterruptFrame) {
             if frame.interrupt_number == 14 {
                 unsafe {
                     asm!("mov {}, cr2", out(reg) cr2, options(nomem, nostack, preserves_flags));
-                }
+                };
             }
 
             assert!(

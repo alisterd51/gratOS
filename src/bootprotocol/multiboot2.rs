@@ -2,7 +2,9 @@ use crate::{bootprotocol::MemoryMapEntry, println};
 use core::{
     cell::UnsafeCell,
     fmt,
-    ptr::{addr_of, copy_nonoverlapping},
+    ptr::{addr_of, copy_nonoverlapping, from_ref},
+    slice::from_raw_parts,
+    str::{self, Utf8Error, from_utf8},
 };
 
 struct Multiboot2TagIter {
@@ -66,7 +68,7 @@ struct Multiboot2BootInfo {
 
 impl Multiboot2BootInfo {
     pub fn tags(&self) -> Multiboot2TagIter {
-        let base_addr = core::ptr::from_ref::<Self>(self) as u32;
+        let base_addr = from_ref::<Self>(self) as u32;
 
         Multiboot2TagIter {
             current_addr: base_addr + 8,
@@ -84,7 +86,8 @@ struct Multiboot2Info {
 impl Multiboot2Info {
     #[allow(clippy::cast_ptr_alignment)]
     pub const fn parse(&self) -> Multiboot2Tag<'_> {
-        let ptr = core::ptr::from_ref::<Self>(self).cast::<u8>();
+        let ptr = from_ref::<Self>(self).cast::<u8>();
+
         unsafe {
             match self.info_type {
                 1 => Multiboot2Tag::CommandLine(&*ptr.cast()),
@@ -164,18 +167,19 @@ struct Multiboot2BootCommandLine {
 }
 
 impl Multiboot2BootCommandLine {
-    pub fn as_str(&self) -> Result<&str, core::str::Utf8Error> {
+    pub fn as_str(&self) -> Result<&str, Utf8Error> {
         let string_length = (self.size - 8) as usize;
+
         unsafe {
-            let string_ptr = core::ptr::from_ref::<Self>(self).cast::<u8>().add(8);
-            let string_slice = core::slice::from_raw_parts(string_ptr, string_length);
+            let string_ptr = from_ref::<Self>(self).cast::<u8>().add(8);
+            let string_slice = from_raw_parts(string_ptr, string_length);
             let null_pos = string_slice
                 .iter()
                 .position(|&b| b == 0)
                 .unwrap_or(string_length);
             let valid_bytes = &string_slice[..null_pos];
 
-            core::str::from_utf8(valid_bytes)
+            from_utf8(valid_bytes)
         }
     }
 }
@@ -198,18 +202,18 @@ struct Multiboot2Modules {
 }
 
 impl Multiboot2Modules {
-    pub fn as_str(&self) -> Result<&str, core::str::Utf8Error> {
+    pub fn as_str(&self) -> Result<&str, Utf8Error> {
         let string_length = (self.size - 16) as usize;
         unsafe {
-            let string_ptr = core::ptr::from_ref::<Self>(self).cast::<u8>().add(16);
-            let string_slice = core::slice::from_raw_parts(string_ptr, string_length);
+            let string_ptr = from_ref::<Self>(self).cast::<u8>().add(16);
+            let string_slice = from_raw_parts(string_ptr, string_length);
             let null_pos = string_slice
                 .iter()
                 .position(|&b| b == 0)
                 .unwrap_or(string_length);
             let valid_bytes = &string_slice[..null_pos];
 
-            core::str::from_utf8(valid_bytes)
+            from_utf8(valid_bytes)
         }
     }
 }
@@ -317,21 +321,17 @@ impl Multiboot2ELFSymbols {
     #[allow(clippy::cast_ptr_alignment)]
     pub const fn section_headers(&self) -> ELFSectionHeaders<'_> {
         unsafe {
-            let headers_ptr = core::ptr::from_ref::<Self>(self).cast::<u8>().add(20);
+            let headers_ptr = from_ref::<Self>(self).cast::<u8>().add(20);
 
             match self.entsize {
                 40 => {
-                    let slice = core::slice::from_raw_parts(
-                        headers_ptr.cast::<ELF32SectionHeader>(),
-                        self.num as usize,
-                    );
+                    let slice =
+                        from_raw_parts(headers_ptr.cast::<ELF32SectionHeader>(), self.num as usize);
                     ELFSectionHeaders::Elf32(slice)
                 }
                 64 => {
-                    let slice = core::slice::from_raw_parts(
-                        headers_ptr.cast::<ELF64SectionHeader>(),
-                        self.num as usize,
-                    );
+                    let slice =
+                        from_raw_parts(headers_ptr.cast::<ELF64SectionHeader>(), self.num as usize);
                     ELFSectionHeaders::Elf64(slice)
                 }
                 _ => ELFSectionHeaders::Unsupported(self.entsize),
@@ -393,15 +393,17 @@ impl fmt::Display for Multiboot2MemoryMapEntry {
 impl Multiboot2MemoryMap {
     #[allow(clippy::cast_possible_truncation, clippy::cast_ptr_alignment)]
     pub const fn entries(&self) -> &[Multiboot2MemoryMapEntry] {
-        let expected_size = core::mem::size_of::<Multiboot2MemoryMapEntry>() as u32;
+        let expected_size = size_of::<Multiboot2MemoryMapEntry>() as u32;
         if self.entry_size != expected_size {
             return &[];
         }
         let entries_total_size = self.size - 16;
         let entry_count = (entries_total_size / self.entry_size) as usize;
+
         unsafe {
-            let entries_ptr = core::ptr::from_ref::<Self>(self).cast::<u8>().add(16);
-            core::slice::from_raw_parts(entries_ptr.cast::<Multiboot2MemoryMapEntry>(), entry_count)
+            let entries_ptr = from_ref::<Self>(self).cast::<u8>().add(16);
+
+            from_raw_parts(entries_ptr.cast::<Multiboot2MemoryMapEntry>(), entry_count)
         }
     }
 }
@@ -428,18 +430,19 @@ struct Multiboot2BootLoaderName {
 }
 
 impl Multiboot2BootLoaderName {
-    pub fn as_str(&self) -> Result<&str, core::str::Utf8Error> {
+    pub fn as_str(&self) -> Result<&str, Utf8Error> {
         let string_length = (self.size - 8) as usize;
+
         unsafe {
-            let string_ptr = core::ptr::from_ref::<Self>(self).cast::<u8>().add(8);
-            let string_slice = core::slice::from_raw_parts(string_ptr, string_length);
+            let string_ptr = from_ref::<Self>(self).cast::<u8>().add(8);
+            let string_slice = from_raw_parts(string_ptr, string_length);
             let null_pos = string_slice
                 .iter()
                 .position(|&b| b == 0)
                 .unwrap_or(string_length);
             let valid_bytes = &string_slice[..null_pos];
 
-            core::str::from_utf8(valid_bytes)
+            from_utf8(valid_bytes)
         }
     }
 }
@@ -577,12 +580,13 @@ impl Multiboot2FramebufferInfo {
     #[allow(clippy::cast_possible_truncation, clippy::cast_ptr_alignment)]
     pub const fn color_info(&self) -> FramebufferColorInfo<'_> {
         unsafe {
-            let data_ptr = core::ptr::from_ref::<Self>(self).cast::<u8>().add(32);
+            let data_ptr = from_ref::<Self>(self).cast::<u8>().add(32);
+
             match self.framebuffer_type {
                 0 => {
                     let num_colors = *data_ptr.cast::<u32>();
                     let palette_ptr = data_ptr.add(4).cast::<Multiboot2FramebufferPalette>();
-                    let palette = core::slice::from_raw_parts(palette_ptr, num_colors as usize);
+                    let palette = from_raw_parts(palette_ptr, num_colors as usize);
 
                     FramebufferColorInfo::Indexed { palette }
                 }
@@ -666,9 +670,11 @@ struct Multiboot2SMBIOSTables {
 impl Multiboot2SMBIOSTables {
     pub const fn smbios_tables(&self) -> &[u8] {
         let data_length = (self.size - 16) as usize;
+
         unsafe {
-            let data_ptr = core::ptr::from_ref::<Self>(self).cast::<u8>().add(16);
-            core::slice::from_raw_parts(data_ptr, data_length)
+            let data_ptr = from_ref::<Self>(self).cast::<u8>().add(16);
+
+            from_raw_parts(data_ptr, data_length)
         }
     }
 }
@@ -677,7 +683,7 @@ impl fmt::Display for Multiboot2SMBIOSTables {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let smbios_tables = self.smbios_tables();
         let signature = if smbios_tables.len() >= 4
-            && let Ok(signature) = core::str::from_utf8(&smbios_tables[0..4])
+            && let Ok(signature) = from_utf8(&smbios_tables[0..4])
         {
             signature
         } else {
@@ -702,12 +708,12 @@ pub struct AcpiRsdpV1 {
 }
 
 impl AcpiRsdpV1 {
-    pub const fn signature_str(&self) -> Result<&str, core::str::Utf8Error> {
-        core::str::from_utf8(&self.signature)
+    pub const fn signature_str(&self) -> Result<&str, Utf8Error> {
+        from_utf8(&self.signature)
     }
 
-    pub const fn oem_id_str(&self) -> Result<&str, core::str::Utf8Error> {
-        core::str::from_utf8(&self.oem_id)
+    pub const fn oem_id_str(&self) -> Result<&str, Utf8Error> {
+        from_utf8(&self.oem_id)
     }
 }
 
@@ -742,7 +748,8 @@ impl Multiboot2ACPIOldRSDP {
             return None;
         }
         unsafe {
-            let rsdp_ptr = core::ptr::from_ref::<Self>(self).cast::<u8>().add(8);
+            let rsdp_ptr = from_ref::<Self>(self).cast::<u8>().add(8);
+
             Some(&*rsdp_ptr.cast::<AcpiRsdpV1>())
         }
     }
@@ -771,7 +778,8 @@ impl Multiboot2ACPINewRSDP {
             return None;
         }
         unsafe {
-            let rsdp_ptr = core::ptr::from_ref::<Self>(self).cast::<u8>().add(8);
+            let rsdp_ptr = from_ref::<Self>(self).cast::<u8>().add(8);
+
             Some(&*rsdp_ptr.cast::<AcpiRsdpV2>())
         }
     }
@@ -797,8 +805,9 @@ impl Multiboot2NetworkingInfo {
     pub const fn dhcp_ack(&self) -> &[u8] {
         let data_length = (self.size - 8) as usize;
         unsafe {
-            let data_ptr = core::ptr::from_ref::<Self>(self).cast::<u8>().add(8);
-            core::slice::from_raw_parts(data_ptr, data_length)
+            let data_ptr = from_ref::<Self>(self).cast::<u8>().add(8);
+
+            from_raw_parts(data_ptr, data_length)
         }
     }
 }
@@ -821,9 +830,11 @@ impl Multiboot2EFIMemoryMap {
     #[allow(dead_code)]
     pub const fn efi_memory_map(&self) -> &[u8] {
         let data_length = (self.size - 16) as usize;
+
         unsafe {
-            let data_ptr = core::ptr::from_ref::<Self>(self).cast::<u8>().add(16);
-            core::slice::from_raw_parts(data_ptr, data_length)
+            let data_ptr = from_ref::<Self>(self).cast::<u8>().add(16);
+
+            from_raw_parts(data_ptr, data_length)
         }
     }
 }
@@ -956,9 +967,7 @@ pub fn init(info_addr: u32) {
     let size = size.min(MULTIBOOT2_CACHE_SIZE);
     let cache = unsafe { &mut *CACHE.0.get() };
 
-    unsafe {
-        copy_nonoverlapping(info_addr as *const u8, cache.blob.0.as_mut_ptr(), size);
-    }
+    unsafe { copy_nonoverlapping(info_addr as *const u8, cache.blob.0.as_mut_ptr(), size) };
     cache.size = size;
     cache.is_ready = true;
 
