@@ -76,9 +76,7 @@ impl BitmapAllocator {
         let mut free_count = 0;
         let mut start_idx = 0;
 
-        for array_index in 0..BITMAP_SIZE {
-            let word = self.bitmap[array_index];
-
+        for (array_index, &word) in self.bitmap.iter().enumerate() {
             if word == usize::MAX {
                 free_count = 0;
                 continue;
