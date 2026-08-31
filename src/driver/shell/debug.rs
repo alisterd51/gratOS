@@ -30,6 +30,8 @@ pub fn alloc_dma(size: usize) {
         DMA_ALLOCS
             .lock()
             .push((virt_base_addr, phys_base_addr, size));
+    } else {
+        println!("dma_alloc({size}) failled");
     }
 }
 
