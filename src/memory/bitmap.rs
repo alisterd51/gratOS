@@ -44,32 +44,84 @@ impl BitmapAllocator {
         self.set_bit(frame, true);
     }
 
+    const fn try_allocate_in_word(&mut self, array_index: usize, word: usize) -> Option<PhysFrame> {
+        if word == usize::MAX {
+            return None;
+        }
+
+        let bit_index = word.trailing_ones() as usize;
+        let number = array_index * (usize::BITS as usize) + bit_index;
+
+        if number < MAX_FRAMES {
+            self.bitmap[array_index] |= 1 << bit_index;
+            self.last_free_index = number + 1;
+            Some(PhysFrame { number })
+        } else {
+            None
+        }
+    }
+
     pub fn allocate_frame(&mut self) -> Option<PhysFrame> {
         let start_array_index = self.last_free_index / (usize::BITS as usize);
+        let bit_offset = self.last_free_index % (usize::BITS as usize);
 
-        for array_index in start_array_index..BITMAP_SIZE {
-            let mut word = self.bitmap[array_index];
+        if start_array_index >= BITMAP_SIZE {
+            return None;
+        }
 
-            if array_index == start_array_index {
-                let bit_offset = self.last_free_index % (usize::BITS as usize);
-                let mask = (1usize << bit_offset) - 1;
+        let mask = (1usize << bit_offset) - 1;
+        let first_word = self.bitmap[start_array_index] | mask;
 
-                word |= mask;
-            }
-            if word != usize::MAX {
-                let bit_index = word.trailing_ones() as usize;
-                let number = array_index * (usize::BITS as usize) + bit_index;
-
-                if number < MAX_FRAMES {
-                    self.bitmap[array_index] |= 1 << bit_index;
-                    self.last_free_index = number + 1;
-
-                    return Some(PhysFrame { number });
-                }
-                return None;
+        if let Some(frame) = self.try_allocate_in_word(start_array_index, first_word) {
+            return Some(frame);
+        }
+        for array_index in (start_array_index + 1)..BITMAP_SIZE {
+            if let Some(frame) = self.try_allocate_in_word(array_index, self.bitmap[array_index]) {
+                return Some(frame);
             }
         }
         None
+    }
+
+    fn scan_partial_word(
+        mut word: usize,
+        array_index: usize,
+        count: usize,
+        free_count: &mut usize,
+        start_idx: &mut usize,
+    ) -> bool {
+        let mut offset = 0;
+
+        while offset < usize::BITS {
+            let zeros = word.trailing_zeros().min(usize::BITS - offset);
+
+            if zeros > 0 {
+                if *free_count == 0 {
+                    *start_idx = array_index * (usize::BITS as usize) + (offset as usize);
+                }
+                *free_count += zeros as usize;
+                if *free_count >= count {
+                    return true;
+                }
+                offset += zeros;
+                if offset >= usize::BITS {
+                    break;
+                }
+                word >>= zeros;
+            }
+
+            let ones = word.trailing_ones();
+
+            if ones > 0 {
+                *free_count = 0;
+                offset += ones;
+                if offset >= usize::BITS {
+                    break;
+                }
+                word >>= ones;
+            }
+        }
+        false
     }
 
     fn find_free_region(&self, count: usize) -> Option<usize> {
@@ -77,21 +129,29 @@ impl BitmapAllocator {
         let mut start_idx = 0;
 
         for (array_index, &word) in self.bitmap.iter().enumerate() {
-            if word == usize::MAX {
-                free_count = 0;
-                continue;
-            }
-            for bit_index in 0..(usize::BITS as usize) {
-                if (word & (1 << bit_index)) == 0 {
+            match word {
+                usize::MAX => {
+                    free_count = 0;
+                }
+                0 => {
                     if free_count == 0 {
-                        start_idx = array_index * usize::BITS as usize + bit_index;
+                        start_idx = array_index * (usize::BITS as usize);
                     }
-                    free_count += 1;
-                    if free_count == count {
+                    free_count += usize::BITS as usize;
+                    if free_count >= count {
                         return Some(start_idx);
                     }
-                } else {
-                    free_count = 0;
+                }
+                _ => {
+                    if Self::scan_partial_word(
+                        word,
+                        array_index,
+                        count,
+                        &mut free_count,
+                        &mut start_idx,
+                    ) {
+                        return Some(start_idx);
+                    }
                 }
             }
         }
@@ -139,10 +199,9 @@ impl BitmapAllocator {
     }
 
     pub fn count_free_frames(&self) -> usize {
-        let mut free = 0;
-        for word in &self.bitmap {
-            free += word.count_zeros() as usize;
-        }
-        free
+        self.bitmap
+            .iter()
+            .map(|word| word.count_zeros() as usize)
+            .sum()
     }
 }
