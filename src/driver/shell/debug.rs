@@ -13,12 +13,22 @@ static DMA_ALLOCS: Mutex<Vec<(usize, u64, usize)>> = Mutex::new(Vec::new());
 pub fn alloc_heap(size: usize) {
     let vec = alloc::vec![b'A'; size];
     let boxed_slice = vec.into_boxed_slice();
+    let ptr = boxed_slice.as_ptr();
 
     HEAP_ALLOCS.lock().push(boxed_slice);
+    println!("heap_alloc: {size} bytes at {ptr:p}");
 }
 
 pub fn free_heap() {
-    HEAP_ALLOCS.lock().pop();
+    if let Some(allocated) = HEAP_ALLOCS.lock().pop() {
+        println!(
+            "heap_free: {} bytes at {:p}",
+            allocated.len(),
+            allocated.as_ptr()
+        );
+    } else {
+        println!("heap_free: no allocation to free");
+    }
 }
 
 pub fn alloc_dma(size: usize) {
@@ -30,12 +40,18 @@ pub fn alloc_dma(size: usize) {
         DMA_ALLOCS
             .lock()
             .push((virt_base_addr, phys_base_addr, size));
+        println!("dma_alloc: {size} bytes (virt: {virt_base_addr:#X}, phys: {phys_base_addr:#X})");
+    } else {
+        println!("dma_alloc({size}) failed");
     }
 }
 
 pub fn free_dma() {
     if let Some((virt_base_addr, phys_base_addr, size)) = DMA_ALLOCS.lock().pop() {
         dma_free(virt_base_addr, phys_base_addr, size);
+        println!("dma_free: {size} bytes at virt {virt_base_addr:#X}");
+    } else {
+        println!("dma_free: no allocation to free");
     }
 }
 
