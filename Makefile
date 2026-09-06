@@ -37,7 +37,7 @@ ${BUILDDIR}:
 	mkdir -p $@
 
 limine-binary:
-	curl -sL https://github.com/Limine-Bootloader/Limine/releases/download/v12.3.1/limine-binary.tar.xz | tar xJf -
+	curl -sL https://github.com/Limine-Bootloader/Limine/releases/download/v12.8.0/limine-binary.tar.xz | tar xJf -
 
 .PHONY: target/target/${BUILD}/gratos
 target/target/${BUILD}/gratos: $(shell find src -type f -name '*.rs') $(shell find src -type f -name '*.s') Cargo.toml
