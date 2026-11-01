@@ -18,7 +18,7 @@ jobs:
           make iso BUILD=release BOOTPROTOCOL=multiboot2 BOOTLOADER=grub
           make iso BUILD=release BOOTPROTOCOL=multiboot2 BOOTLOADER=limine
       - name: Upload nightly artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: gratos-nightly
           path: |
