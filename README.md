@@ -16,10 +16,12 @@ cd gratOS
 make run
 ```
 
-### From nightly release
+### From nightly build
+
+Prerequisite: [GitHub CLI (`gh`)](https://cli.github.com/)
 
 ```bash
-wget https://github.com/alisterd51/gratOS/releases/download/nightly/gratos.x86.grub.iso
+gh run download --repo alisterd51/gratOS --name gratos-nightly
 qemu-system-i386 -cdrom gratos.x86.grub.iso
 ```
 
