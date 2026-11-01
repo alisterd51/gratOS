@@ -7,18 +7,21 @@ on:
 
 jobs:
   release:
-    permissions: write-all
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     container: ghcr.io/alisterd51/cross-toolchain:nightly
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Build ISO
         run: |
           make iso BUILD=release BOOTPROTOCOL=multiboot2 BOOTLOADER=grub
           make iso BUILD=release BOOTPROTOCOL=multiboot2 BOOTLOADER=limine
       - name: Release
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3
         with:
           files: |
             build/release/gratos.x86.grub.iso
             build/release/gratos.x86.limine.iso
+          fail_on_unmatched_files: true
