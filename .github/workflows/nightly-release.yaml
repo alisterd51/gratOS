@@ -6,9 +6,10 @@ on:
     - cron: '42 0 * * *'
 
 jobs:
-  nightly-prerelease:
-    permissions: write-all
+  nightly:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     container: ghcr.io/alisterd51/cross-toolchain:nightly
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -16,30 +17,11 @@ jobs:
         run: |
           make iso BUILD=release BOOTPROTOCOL=multiboot2 BOOTLOADER=grub
           make iso BUILD=release BOOTPROTOCOL=multiboot2 BOOTLOADER=limine
-      - name: Create nightly tag
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+      - name: Upload nightly artifacts
+        uses: actions/upload-artifact@v4
         with:
-          script: |
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/tags/nightly',
-              sha: context.sha
-            }).catch(err => {
-              if (err.status !== 422) throw err;
-              github.rest.git.updateRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: 'tags/nightly',
-                sha: context.sha
-              });
-            })
-      - name: Release
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
-        with:
-          files: |
+          name: gratos-nightly
+          path: |
             build/release/gratos.x86.grub.iso
             build/release/gratos.x86.limine.iso
-          prerelease: true
-          name: nightly
-          tag_name: nightly
+          retention-days: 7
