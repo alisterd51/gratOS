@@ -11,7 +11,7 @@ struct HistoryData {
 }
 
 impl HistoryData {
-    #[allow(clippy::large_stack_frames, clippy::large_stack_arrays)]
+    #[allow(clippy::large_unopt_stack_frames, clippy::large_stack_arrays)]
     const fn new() -> Self {
         Self {
             chars: [[[ScreenChar {

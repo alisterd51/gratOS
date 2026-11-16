@@ -104,15 +104,9 @@ impl Keyboard {
                 let c = (c as u8) & 0x3F;
                 console::push_keyboard_byte(c);
             }
-            KeymapValue::CapsLock if pressed => {
-                self.key_modifier.caps_lock = !self.key_modifier.caps_lock;
-            }
-            KeymapValue::NumberLock if pressed => {
-                self.key_modifier.num_lock = !self.key_modifier.num_lock;
-            }
-            KeymapValue::ScrollLock if pressed => {
-                self.key_modifier.scroll_lock = !self.key_modifier.scroll_lock;
-            }
+            KeymapValue::CapsLock if pressed => self.key_modifier.caps_lock.toggle(),
+            KeymapValue::NumberLock if pressed => self.key_modifier.num_lock.toggle(),
+            KeymapValue::ScrollLock if pressed => self.key_modifier.scroll_lock.toggle(),
             KeymapValue::LeftControl => self.key_modifier.left_control = pressed,
             KeymapValue::LeftShift => self.key_modifier.left_shift = pressed,
             KeymapValue::LeftAlt => self.key_modifier.alt = pressed,
